@@ -1,0 +1,10 @@
+// Items Additional Database
+//
+// Structure of Database:
+// ID,Name,Name,Type,Price,Sell,Weight,ATK[:MATK],DEF,Range,Slot,Job,Class,Gender,Loc,wLV,eLV[:maxLevel],Refineable,View,{ Script },{ OnEquip_Script },{ OnUnequip_Script }
+//
+//===================================================================
+// Vending system
+//===================================================================
+30000,Zeny,Zeny,3,,10,10,,,,,,,,,,,,,{},{},{}
+30001,Cash,Cash,3,,10,10,,,,,,,,,,,,,{},{},{}
