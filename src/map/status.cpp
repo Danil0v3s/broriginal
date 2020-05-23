@@ -54,6 +54,7 @@ static struct {
 	int bonus[MAX_REFINE]; /// Cumulative fixed bonus damage
 	int randombonus_max[MAX_REFINE]; /// Cumulative maximum random bonus damage
 	struct refine_cost cost[REFINE_COST_MAX];
+	struct refine_bs_blessing bs_blessing[MAX_REFINE];
 } refine_info[REFINE_TYPE_MAX];
 
 static struct eri *sc_data_ers; /// For sc_data entries
@@ -15367,6 +15368,25 @@ int status_get_refine_chance(enum refine_type wlv, int refine, bool enriched)
 }
 
 /**
+ * Get Blacksmith Blessing requirement for refining
+ * @param bs Pointer to store the value
+ * @param type Armor or weapon level (see enum refine_type)
+ * @param refine Current refine level
+ * @return True if has valid value, false otherwise.
+ **/
+bool status_get_refine_blacksmithBlessing(struct refine_bs_blessing* bs, enum refine_type type, int refine)
+{
+	if (refine < 0 || refine >= MAX_REFINE)
+		return false;
+
+	if (type < REFINE_TYPE_ARMOR || type > REFINE_TYPE_SHADOW)
+		return false;
+
+	memcpy(bs, &refine_info[type].bs_blessing[refine], sizeof(struct refine_bs_blessing));
+	return true;
+}
+
+/**
  * Check if status is disabled on a map
  * @param type: Status Change data
  * @param mapIsVS: If the map is a map_flag_vs type
@@ -15524,6 +15544,20 @@ static bool status_yaml_readdb_refine_sub(const YAML::Node &node, int refine_inf
 
 		if (refine_level >= random_bonus_start_level - 1)
 			refine_info[refine_info_index].randombonus_max[refine_level] = random_bonus * (refine_level - random_bonus_start_level + 2);
+
+		// Blacksmith Blessing
+		if (level["BlacksmithBlessing"].IsDefined()) {
+			const YAML::Node &blessing = level["BlacksmithBlessing"];
+			static char* keys[] = { "ItemID", "Count" };
+
+			if (!blessing["ItemID"].IsDefined() || !blessing["Count"].IsDefined()) {
+				ShowWarning("status_yaml_readdb_refine_sub: Invalid Blacksmith Blessing defined in " CL_WHITE "%d" CL_RESET "in file" CL_WHITE "%s" CL_RESET ".\n", refine_level, file_name);
+			}
+			else {
+				refine_info[refine_info_index].bs_blessing[refine_level].nameid = blessing["ItemID"].as<int>();
+				refine_info[refine_info_index].bs_blessing[refine_level].count = blessing["Count"].as<int>();
+			}
+		}
 	}
 	for (int refine_level = 0; refine_level < MAX_REFINE; ++refine_level)
 		refine_info[refine_info_index].bonus[refine_level] += bonus_per_level + (refine_level > 0 ? refine_info[refine_info_index].bonus[refine_level - 1] : 0);
@@ -15657,7 +15691,8 @@ int status_readdb(void)
 	// refine_db.yml
 	for(i=0;i<ARRAYLENGTH(refine_info);i++)
 	{
-		memset(refine_info[i].cost, 0, sizeof(struct refine_cost));
+		memset(&refine_info[i].cost, 0, sizeof(struct refine_cost)*REFINE_COST_MAX);
+		memset(&refine_info[i].bs_blessing, 0, sizeof(struct refine_bs_blessing)*MAX_REFINE);
 		for(j = 0; j < REFINE_CHANCE_TYPE_MAX; j++)
 			for(k=0;k<MAX_REFINE; k++)
 			{
