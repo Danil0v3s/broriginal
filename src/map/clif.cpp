@@ -21354,6 +21354,32 @@ static inline uint8 clif_refineui_materials( struct item *item, struct item_data
 	return count;
 }
 
+uint8 clif_refineui_blessing (struct item* item ) {
+	uint8 blessing_count = 0;
+
+	switch (item->refine) {
+	case 7:
+		blessing_count = 1;
+		break;
+	case 8:
+		blessing_count = 2;
+		break;
+	case 9:
+		blessing_count = 4;
+		break;
+	case 10:
+		blessing_count = 7;
+		break;
+	case 11:
+		blessing_count = 11;
+		break;
+	default:
+		break;
+	}
+
+	return blessing_count;
+}
+
 /**
  * Adds the selected item into the refine UI and sends the possible materials
  * to the client.
@@ -21365,7 +21391,7 @@ void clif_refineui_info( struct map_session_data* sd, uint16 index ){
 	struct item_data *id;
 	uint16 length;
 	struct refine_materials materials[REFINEUI_MAT_CNT];
-	uint8 i, material_count;
+	uint8 i, material_count, blessing_count;
 
 	// Get the item db reference
 	id = sd->inventory_data[index];
@@ -21411,6 +21437,9 @@ void clif_refineui_info( struct map_session_data* sd, uint16 index ){
 	// Calculate the possible materials
 	material_count = clif_refineui_materials( item, id, materials );
 
+	// Calculate the blessing needed
+	blessing_count = clif_refineui_blessing( item );
+
 	// No possibilities were found
 	if( material_count == 0 ){
 		return;
@@ -21422,7 +21451,7 @@ void clif_refineui_info( struct map_session_data* sd, uint16 index ){
 	WFIFOW(fd,0) = 0x0AA2;
 	WFIFOW(fd,2) = length;
 	WFIFOW(fd,4) = index + 2;
-	WFIFOB(fd,6) = 0; //TODO: required amount of "Blacksmith Blessing"(id: 6635)
+	WFIFOB(fd,6) = blessing_count;
 
 	for( i = 0; i < material_count; i++ ){
 		WFIFOW(fd,7 + i * 7) = materials[i].cost.nameid;
