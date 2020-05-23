@@ -15542,35 +15542,21 @@ static bool status_yaml_readdb_refine_sub(const YAML::Node &node, int refine_inf
 		if (level["Bonus"].IsDefined())
 			refine_info[refine_info_index].bonus[refine_level] = level["Bonus"].as<int>();
 
-			if (yaml_node_is_defined(level, "EventEnrichedChance"))
-				refine_info[refine_info_index].chance[REFINE_CHANCE_EVENT_ENRICHED][refine_level] = yaml_get_int(level, "EventEnrichedChance");
-			if (yaml_node_is_defined(level, "Bonus"))
-				refine_info[refine_info_index].bonus[refine_level] = yaml_get_int(level, "Bonus");
+		if (refine_level >= random_bonus_start_level - 1)
+			refine_info[refine_info_index].randombonus_max[refine_level] = random_bonus * (refine_level - random_bonus_start_level + 2);
 
-			if (refine_level >= random_bonus_start_level - 1)
-				refine_info[refine_info_index].randombonus_max[refine_level] = random_bonus * (refine_level - random_bonus_start_level + 2);
+		// Blacksmith Blessing
+		if (level["BlacksmithBlessing"].IsDefined()) {
+			const YAML::Node &blessing = level["BlacksmithBlessing"];
+			static char* keys[] = { "ItemID", "Count" };
 
-			// Blacksmith Blessing
-			if (yaml_node_is_defined(level, "BlacksmithBlessing")) {
-				yamlwrapper* bswrap = yaml_get_subnode(level, "BlacksmithBlessing");
-				static char* keys[] = { "ItemID", "Count" };
-				char* result;
-
-				if ((result = yaml_verify_nodes(bswrap, ARRAYLENGTH(keys), keys)) != NULL) {
-					ShowWarning("status_yaml_readdb_refine_sub: Invalid refine cost with undefined " CL_WHITE "%s" CL_RESET "in file" CL_WHITE "%s" CL_RESET ".\n", result, file_name);
-					yaml_destroy_wrapper(bswrap);
-				}
-				else {
-					refine_info[refine_info_index].bs_blessing[refine_level].nameid = yaml_get_int(bswrap, "ItemID");
-					refine_info[refine_info_index].bs_blessing[refine_level].count = yaml_get_uint16(bswrap, "Count");
-					yaml_destroy_wrapper(bswrap);
-				}
+			if (!blessing["ItemID"].IsDefined() || !blessing["Count"].IsDefined()) {
+				ShowWarning("status_yaml_readdb_refine_sub: Invalid Blacksmith Blessing defined in " CL_WHITE "%d" CL_RESET "in file" CL_WHITE "%s" CL_RESET ".\n", refine_level, file_name);
 			}
-
-			yaml_destroy_wrapper(level);
-		}
-		for (int refine_level = 0; refine_level < MAX_REFINE; ++refine_level) {
-			refine_info[refine_info_index].bonus[refine_level] += bonus_per_level + (refine_level > 0 ? refine_info[refine_info_index].bonus[refine_level - 1] : 0);
+			else {
+				refine_info[refine_info_index].bs_blessing[refine_level].nameid = blessing["ItemID"].as<int>();
+				refine_info[refine_info_index].bs_blessing[refine_level].count = blessing["Count"].as<int>();
+			}
 		}
 	}
 	for (int refine_level = 0; refine_level < MAX_REFINE; ++refine_level)
