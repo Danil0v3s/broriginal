@@ -64,9 +64,14 @@ struct refine_cost {
 	bool breakable;
 };
 
+struct refine_bs_blessing {
+	unsigned short nameid, count;
+};
+
 /// Get refine chance
 int status_get_refine_chance(enum refine_type wlv, int refine, bool enriched);
 int status_get_refine_cost(int weapon_lv, int type, enum refine_info_type what);
+bool status_get_refine_blacksmithBlessing(struct refine_bs_blessing* bs, enum refine_type type, int refine);
 
 /// Weapon attack modification for size
 struct s_sizefix_db {
