@@ -21354,37 +21354,15 @@ static inline uint8 clif_refineui_materials( struct item *item, struct item_data
 		count++;
 	}
 
+	if ( item->refine >= 6 && item->refine <= 12 && clif_refineui_materials_sub( item, id, materials, count, REFINE_COST_HOLINK ) ) {
+		count++;
+	}
+
 	// Blacksmith Blessing requirements if any
 	status_get_refine_blacksmithBlessing(&materials[REFINEUI_MAT_BS_BLESS].bs_bless, (enum refine_type)id->wlv, item->refine);
 
 	// Return the amount of found materials
 	return count;
-}
-
-uint8 clif_refineui_blessing (struct item* item ) {
-	uint8 blessing_count = 0;
-
-	switch (item->refine) {
-	case 7:
-		blessing_count = 1;
-		break;
-	case 8:
-		blessing_count = 2;
-		break;
-	case 9:
-		blessing_count = 4;
-		break;
-	case 10:
-		blessing_count = 7;
-		break;
-	case 11:
-		blessing_count = 11;
-		break;
-	default:
-		break;
-	}
-
-	return blessing_count;
 }
 
 /**
@@ -21443,9 +21421,6 @@ void clif_refineui_info( struct map_session_data* sd, uint16 index ){
 
 	// Calculate the possible materials
 	material_count = clif_refineui_materials( item, id, materials );
-
-	// Calculate the blessing needed
-	blessing_count = clif_refineui_blessing( item );
 
 	// No possibilities were found
 	if( material_count == 0 ){

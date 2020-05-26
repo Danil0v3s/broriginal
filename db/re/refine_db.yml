@@ -42,10 +42,14 @@ Armor:
       Breakable: false
     - Type: REFINE_COST_HOLINK
       Price: 15000
-      Material: 7619
+      Material: 6439
     - Type: REFINE_COST_WAGJAK
       Price: 20000
       Material: 985
+    # - Type: REFINE_COST_BLESSED
+    #   Price: 20000
+    #   Material: 6439
+    #   Breakable: false
   Rates:
     - Level: 1
       Bonus: 100
@@ -66,6 +70,7 @@ Armor:
       EnrichedChance: 70
       EventNormalChance: 40
       EventEnrichedChance: 80
+      BlessedChance: 70
       Bonus: 200
     - Level: 7
       NormalChance: 40
@@ -76,7 +81,7 @@ Armor:
     - Level: 8
       NormalChance: 20
       EnrichedChance: 40
-      EventNormalChance: 20
+      EventNormalChance: 90
       EventEnrichedChance: 50
       Bonus: 200
       BlacksmithBlessing:
@@ -194,6 +199,10 @@ WeaponLv1:
     - Type: REFINE_COST_WAGJAK
       Price: 1000
       Material: 1010
+    - Type: REFINE_COST_BLESSED
+      Price: 20000
+      Material: 1010
+      Breakable: false
   Rates:
     - Level: 8
       NormalChance: 60
@@ -308,6 +317,10 @@ WeaponLv2:
     - Type: REFINE_COST_WAGJAK
       Price: 2000
       Material: 1011
+    - Type: REFINE_COST_BLESSED
+      Price: 20000
+      Material: 1010
+      Breakable: false
   Rates:
     - Level: 7
       NormalChance: 60
@@ -427,6 +440,10 @@ WeaponLv3:
     - Type: REFINE_COST_WAGJAK
       Price: 10000
       Material: 984
+    - Type: REFINE_COST_BLESSED
+      Price: 20000
+      Material: 1010
+      Breakable: false
   Rates:
     - Level: 6
       NormalChance: 60
@@ -551,6 +568,10 @@ WeaponLv4:
     - Type: REFINE_COST_WAGJAK
       Price: 20000
       Material: 984
+    - Type: REFINE_COST_BLESSED
+      Price: 20000
+      Material: 1010
+      Breakable: false
   Rates:
     - Level: 5
       NormalChance: 60
