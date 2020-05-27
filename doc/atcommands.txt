@@ -1186,6 +1186,14 @@ Adopts the specified player with the attached character as one of the parents.
 
 ---------------------------------------
 
+@refineui
+
+Opens the refine user interface.
+
+Note: This command requires packet version 2016-10-12 or newer.
+
+---------------------------------------
+
 @request <message>
 
 Sends a message to all connected GMs (via the GM whisper system).
@@ -1764,5 +1772,14 @@ Bans or unbans a player from the specified channel.
 @channel unbind
 
 Binds or unbinds your global chat with the specified channel, which sends all global messages to the specified channel.
+
+---------------------------------------
+
+@setquest <quest ID>
+@erasequest <quest ID>
+@completequest <quest ID>
+@checkquest <quest ID>
+
+Changes/checks the status of the specified quest ID.
 
 ---------------------------------------

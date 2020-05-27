@@ -348,6 +348,8 @@ struct Battle_Config
 
 	int prevent_logout;	// Added by RoVeRT
 	int prevent_logout_trigger;
+	int land_protector_behavior;
+	int npc_emotion_behavior;
 
 	int alchemist_summon_reward;	// [Valaris]
 	int drops_by_luk;
@@ -626,6 +628,7 @@ struct Battle_Config
 	int exp_cost_inspiration;
 	int mvp_exp_reward_message;
 	int can_damage_skill; //Which BL types can damage traps
+	int reserved_costume_id;
 	int atcommand_levelup_events;
 	int atcommand_disable_npc;
 	int block_account_in_same_party;
@@ -670,8 +673,11 @@ struct Battle_Config
 	int boss_nopc_idleskill_rate;
 	int boss_nopc_move_rate;
 	int hom_idle_no_share;
+	int idletime_hom_option;
 	int devotion_standup_fix;
 	int feature_bgqueue;
+	int homunculus_exp_gain;
+	int feature_refineui;
 
 #include "../custom/battle_config_struct.inc"
 };
