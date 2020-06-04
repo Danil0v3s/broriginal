@@ -1,0 +1,405 @@
+// Items Additional Database
+//
+// Structure of Database:
+// ID,Name,Name,Type,Price,Sell,Weight,ATK[:MATK],DEF,Range,Slot,Job,Class,Gender,Loc,wLV,eLV[:maxLevel],Refineable,View,{ Script },{ OnEquip_Script },{ OnUnequip_Script }
+//
+// THQ Quest Items
+//=============================================================
+//7950,THG_Membership,THG Membership,3,,10,10,,,,,,,,,,,,,{},{},{}
+//7951,Token_Bag,Token Bag,3,,10,10,,,,,,,,,,,,,{},{},{}
+//1998,Jeramiah's_Jur,Jeramiah's Jur,3,,10,10,,,,,,,,,,,,,{},{},{}
+//1999,Zed's_Staff,Zed's Staff,3,,10,10,,,,,,,,,,,,,{},{},{}
+
+// Official Event Items that had their Effects removed after the event was completed
+//585,Wurst,Brusti,11,2,,40,,,,,0xFFFFFFFF,63,2,,,,,,{ itemheal rand(15,20),0; itemskill "PR_MAGNIFICAT",3; },{},{}
+//679,Gold_Pill,Pilule,0,5000,,300,,,,,0xFFFFFFFF,63,2,,,,,,{ percentheal 50,50; },{},{}
+
+//2681,Republic_Ring,Republic Anniversary Ring,4,20,,100,,0,,0,0xFFFFFFFF,63,2,136,,0,0,0,{ bonus bAllStats,3; },{},{}
+
+//5134,Pumpkin_Hat,Pumpkin-Head,4,20,,200,,2,,0,0xFFFFFFFF,63,2,256,,0,1,206,{ bonus2 bSubRace,RC_Demon,5; },{},{}
+//5136,Santa's_Hat_,Louise's Santa Hat,4,20,,100,,3,,0,0xFFFFFFFF,63,2,256,,0,1,20,{ bonus bMdef,1; bonus bLuk,1; bonus3 bAutoSpellWhenHit,"AL_HEAL",3,50; bonus3 bAutoSpellWhenHit,"AL_BLESSING",10,50; },{},{}
+//5145,Carnival_Joker_Jester,Carnival Jester,4,10,,100,,0,,0,0xFFFFFFFF,63,2,256,,0,1,89,{ bonus bAllStats,3; },{},{}
+//5147,Baseball_Cap,Baseball Cap,4,0,,200,,3,,0,0xFFFFFFFF,63,2,256,,0,1,216,{ bonus2 bExpAddRace,RC_Boss,50; bonus2 bExpAddRace,RC_NonBoss,50; },{},{}
+//5201,Party_Hat_B,2nd Anniversary Party Hat,4,20,,300,,3,,0,0xFFFFFFFF,63,2,256,,0,1,144,{ bonus bAllStats,3; },{},{}
+//5202,Pumpkin_Hat_,Pumpkin Hat,4,20,,200,,2,,0,0xFFFFFFFF,63,2,256,,0,1,206,{ bonus bAllStats,2; bonus2 bSubRace,RC_Demon,5; bonus3 bAddMonsterDropItem,529,RC_DemiHuman,1500; },{},{}
+//5204,Event_Pierrot_Nose,Rudolf's Red Nose,4,20,,100,,0,,0,0xFFFFFFFF,63,2,1,,0,0,49,{ bonus2 bResEff,Eff_Blind,3000; bonus2 bAddMonsterDropItem,12130,30; },{},{}
+//5264,Aussie_Flag_Hat,Australian Flag Hat,4,20,,500,,4,,0,0xFFFFFFFF,63,2,256,,0,1,304,{ bonus bAllStats,2; },{},{}
+//5356,Pumpkin_Hat_H,Pumpkin Hat,4,20,,200,,2,,0,0xFFFFFFFF,63,2,256,,0,1,206,{ bonus bAllStats,2; bonus2 bSubRace,RC_Demon,5; bonus2 bMagicAddRace,RC_Demon,5; },{},{}
+//5384,Santa_Hat_1,Twin Pompom By JB,4,20,,200,,2,,1,0xFFFFFFFF,63,2,256,,20,1,390,{ bonus bLuk,3; bonus2 bResEff,Eff_Curse,2000; bonus bVariableCastrate,-2; bonus bAspdRate,4; bonus2 bAddMonsterDropItem,539,100; bonus2 bAddMonsterDropItem,529,200; bonus2 bAddMonsterDropItem,530,200; autobonus "{ bonus bCritical,10; }",10,5000; },{},{}
+//5811,Santa_Beard,Santa Beard,4,20,,100,,5,,0,0xFFFFFFFF,63,2,1,,0,0,25,{ bonus2 bSubRace,RC_Brute,5; },{},{}
+
+//11702,Moon_Cookie,Moon Cookie,11,0,,10,,,,,0xFFFFFFFF,63,2,,,,,,{ sc_end SC_POISON; sc_end SC_SILENCE; sc_end SC_BLIND; sc_end SC_CONFUSION; sc_end SC_CURSE; sc_end SC_HALLUCINATION; itemskill "AL_BLESSING",7; },{},{}
+//12131,Lucky_Potion,Lucky Potion,0,2,,100,,,,,0xFFFFFFFF,63,2,,,,,,{ sc_start SC_LUKFOOD,180000,15; },{},{}
+//12143,Red_Can,Red Can,2,50000,,300,,,,,0xFFFFFFFF,63,2,,,,,,{ percentheal 25,25; },{},{}
+//Event effect: Summon monster? Probably Rice_Cake. x_x
+//12199,Rice_Scroll,Rice Scroll,2,0,,0,,,,,0xFFFFFFFF,63,2,,,,,,{},{},{}
+//12200,Event_Cake,Event Cake,2,20,,50,,,,,0xFFFFFFFF,63,2,,,,,,{ itemskill "PR_MAGNIFICAT",3; },{},{}
+//12238,New_Year_Rice_Cake_1,New Year Rice Cake,0,20,,100,,,,,0xFFFFFFFF,63,2,,,,,,{ percentheal 20,15; sc_start SC_STRFOOD,1200000,3; sc_start SC_INTFOOD,1200000,3; sc_start SC_LUKFOOD,1200000,3; sc_start SC_SPEEDUP1,5000,0; },{},{}
+//12239,New_Year_Rice_Cake_2,New Year Rice Cake,0,20,,100,,,,,0xFFFFFFFF,63,2,,,,,,{ percentheal 20,15; sc_start SC_DEXFOOD,1200000,3; sc_start SC_AGIFOOD,1200000,3; sc_start SC_VITFOOD,1200000,3; sc_start SC_SPEEDUP1,5000,0; },{},{}
+
+// iRO St. Patrick's Day Event 2008
+//=============================================================
+//12715,Black_Treasure_Chest,Black Treasure Chest,2,0,,200,,,,,0xFFFFFFFF,63,2,,,,,,{ callfunc "F_08stpattyseventbox"; },{},{}
+
+// iRO Valentine's Day Event 2009
+//=============================================================
+//12742,Valentine_Gift_Box_M,Valentine Gift Box,2,10,,0,,,,,0xFFFFFFFF,63,2,,,,,,{ getitem 7946,1; },{},{}
+//12743,Valentine_Gift_Box_F,Valentine Gift Box,2,10,,0,,,,,0xFFFFFFFF,63,2,,,,,,{ getitem 7947,1; },{},{}
+//12744,Chocolate_Box,Chocolate Box,2,10,,0,,,,,0xFFFFFFFF,63,2,,,,,,{ getitem 558,1; },{},{}
+//14466,Valentine's_Emblem_Box,Valentine's Emblem Box,2,10,,0,,,,,0xFFFFFFFF,63,2,,,,,,{ getitem 5817,1; },{},{}
+//7946,Gold_Ring_Of_Valentine,Gold Ring Of Valentine,3,10,,0,,,,,,,,,,,,,{},{},{}
+//7947,Silver_Ring_Of_Valentine,Silver Ring Of Valentine,3,10,,0,,,,,,,,,,,,,{},{},{}
+//7948,Box,Box,3,10,,10,,,,,,,,,,,,,{},{},{}
+//5817,Valentine's_Emblem,Valentine's Emblem,4,10,,0,,3,,0,0xFFFFFFFF,63,2,136,,0,0,0,{ bonus bAtkRate,3; bonus bMatkRate,3; bonus bAllStats,2; bonus bFlee,10; bonus bAspd,1; bonus bMdef,3; bonus2 bSkillAtk,"AL_HEAL",10; bonus2 bSkillHeal,"AL_HEAL",10; bonus2 bSkillHeal,"AM_POTIONPITCHER",10; bonus2 bAddItemGroupHealRate,IG_Potion,10; },{},{}
+
+// iRO Halloween Event 2009
+//=============================================================
+//5668,Weird_Pumpkin_Hat,Weird Pumpkin Hat,4,20,,0,,5,,0,0xFFFFFFFF,63,2,256,,0,1,206,{ bonus bMdef,5; bonus2 bAddMonsterDropItem,12192,2500; },{},{}
+//6298,Crushed_Pumpkin,Crushed Pumpkin,3,0,,0,,,,,,,,,,,,,{},{},{}
+//6299,Worn_Fabric,Worn Fabric,3,0,,0,,,,,,,,,,,,,{},{},{}
+
+// Old Tuxedo and Wedding Dress, will display the outfit when worn.
+//==================================================================
+//2338,Wedding_Dress,Wedding Dress,4,43000,,500,,0,,0,0xFFFFFFFE,63,0,16,,0,1,0,{},{ sc_start SC_WEDDING,INFINITE_TICK,0; },{ sc_end SC_WEDDING; }
+//7170,Tuxedo,Tuxedo,4,43000,,10,,0,,0,0xFFFFFFFE,63,1,16,,0,1,0,{},{ sc_start SC_WEDDING,INFINITE_TICK,0; },{ sc_end SC_WEDDING; }
+
+// Non-kRO Eden Group Mark effect
+//=============================================================
+//22508,Para_Team_Mark_,Eden Group Mark,11,0,,0,,,,0,0xFFFFFFFF,63,2,,,,,,{ unitskilluseid getcharid(3),"AL_TELEPORT",3; },{},{}
+
+
+// ItemInfo Sync
+//=============================================================
+1847,IRON_NAIL_1847,Iron Nail,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,12,{},{},{}
+1993,BARBED_WIRE_1993,Barbed Wire,5,10,0,0,,,,1,0xFFFFFFFF,63,2,2,,,1,14,{},{},{}
+2047,CAJADO_DA_BRUXA_2047,Cajado da Bruxa,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+2048,IRON_STAFF_2048,Iron Staff,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,23,{},{},{}
+2192,ROSE_OF_EDEN_2192,Rose of Eden,5,10,0,0,,,,1,0xFFFFFFFF,63,2,32,,,1,3,{},{},{}
+2961,MAGIC_CARPET_2961,Magic Carpet,4,10,0,0,,,,0,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+4624,CARTA_TAO_GUNKA_SELADA_4624,Carta Tao Gunka Selada,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+4901,MDEF_7_4901,MDEF+7,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+5878,MIRACLE_BLUE_ROSE_5878,Miracle Blue Rose,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1064,{},{},{}
+5880,CHEERING_WHISTLE_5880,Cheering Whistle,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,952,{},{},{}
+5897,ASCENDANT_CROWN_5897,Ascendant Crown,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1118,{},{},{}
+5898,AUTUMN_HEADBAND_5898,Autumn Headband,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1119,{},{},{}
+5899,BLACK_RIBBON_5899,Black Ribbon,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1120,{},{},{}
+5909,COSTUME_VALKYRIE_CIRCLET_5909,Costume Valkyrie Circlet,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,940,{},{},{}
+5930,MAGICAL_FEATHER_5930,Magical Feather,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1279,{},{},{}
+5931,NIFLEHEIM_BUNNY_HAT_5931,Nifleheim Bunny Hat,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1285,{},{},{}
+5932,BIRD_CAGE_OF_PARADISE_5932,Bird Cage of Paradise,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1286,{},{},{}
+5963,WING_HEADPHONE_5963,Wing Headphone,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1347,{},{},{}
+5975,STAHL_VON_KAISER_61_II_5975,Stahl Von Kaiser 61 II,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1376,{},{},{}
+5983,COSTUME_LOKI_ASSASSIN_MASK_5983,Costume Loki Assassin Mask,4,10,0,0,,,,0,0xFFFFFFFF,63,2,2048,,,1,1345,{},{},{}
+6458,CARD_IBEU_6458,Card Ibeu,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+6831,TICKET_DE_RUNE_MIDGARD_6831,Ticket de Rune-Midgard,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+11607,SWEET_CREPE_11607,Sweet Crepe,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+11612,AROMATIC_POP_CORN_11612,Aromatic Pop Corn,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+12832,MYSTERIOUS_LIFE_POTION_12832,Mysterious Life Potion,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+13080,RAG_KNIFE_13080,Rag Knife,5,10,0,0,,,,0,0xFFFFFFFF,63,2,2,,,1,1,{},{},{}
+13084,EROSION_BLADE_13084,Erosion Blade,5,10,0,0,,,,0,0xFFFFFFFF,63,2,2,,,1,1,{},{},{}
+13437,ORCISH_SWORD_13437,Orcish Sword,5,10,0,0,,,,4,0xFFFFFFFF,63,2,2,,,1,2,{},{},{}
+13447,BYEOLLUNGUM_13447,Byeollungum,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,2,{},{},{}
+13463,EXCALIBUR_13463,Excalibur,5,10,0,0,,,,3,0xFFFFFFFF,63,2,2,,,1,2,{},{},{}
+13464,ELASTIC_HAND_13464,Elastic Hand,5,10,0,0,,,,3,0xFFFFFFFF,63,2,2,,,1,2,{},{},{}
+13465,SAVE_THE_KING_13465,Save the King,5,10,0,0,,,,3,0xFFFFFFFF,63,2,2,,,1,2,{},{},{}
+13499,KLADENETS_13499,Kladenets,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+14346,BRAZILIAN_FLAG_HAT_BOX_14346,Brazilian Flag Hat Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+14359,TAOGUN_KA_SCROLL_BOX_14359,Taogun Ka Scroll Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+14360,MISTRESS_SCROLL_BOX_14360,Mistress Scroll Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+14374,EXTRAVAGANT_FIREWORK_BOX_14374,Extravagant Firework Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+14467,CARNIVAL_HAT_BOX_14467,Carnival Hat Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+14468,CARNIVAL_CIRCLET_BOX_14468,Carnival Circlet Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15136,OLD_TATENASHI_ARMOR_15136,Old Tatenashi Armor,4,10,0,0,,,,1,0xFFFFFFFF,63,2,16,,,1,0,{},{},{}
+15206,ARMADURA_TATENASHI_15206,Armadura Tatenashi,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15219,VESTES_DE_GHOSTRING_15219,Vestes de Ghostring,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15238,COTA_DO_DRAGAO_MALIGNO_15238,Cota do Drag„o Maligno,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15239,VESTES_DE_ANGELING_15239,Vestes de Angeling,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15240,ARMADURA_DO_DRAGAO_VERMELHO_15240,Armadura do Drag„o Vermelho,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15248,TRAJE_DE_WICKEBINE_15248,Traje de Wickebine,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15254,VESTIDO_ABISSAL_15254,Vestido Abissal,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15272,ARMADURA_DA_KHALITZBURG_15272,Armadura da Khalitzburg,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15278,SOARING_POWER_ARMOR_15278,Soaring Power Armor,4,10,0,0,,,,1,0xFFFFFFFF,63,2,16,,,1,0,{},{},{}
+15279,STRONG_MAGIC_ARMOR_15279,Strong Magic Armor,4,10,0,0,,,,1,0xFFFFFFFF,63,2,16,,,1,0,{},{},{}
+15345,ARMADURA_DO_DRAGAO_AZUL_15345,Armadura do Drag„o Azul,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15346,UNEXPECTED_LUCKY_ARMOR_15346,Unexpected Lucky Armor,4,10,0,0,,,,1,0xFFFFFFFF,63,2,16,,,1,0,{},{},{}
+15347,HARDENED_VITALITY_ARMOR_15347,Hardened Vitality Armor,4,10,0,0,,,,1,0xFFFFFFFF,63,2,16,,,1,0,{},{},{}
+15353,BRILLIANT_RAPID_ARMOR_15353,Brilliant Rapid Armor,4,10,0,0,,,,1,0xFFFFFFFF,63,2,16,,,1,0,{},{},{}
+15354,EXCELLENT_DEXTERITY_ARMOR_15354,Excellent Dexterity Armor,4,10,0,200,,120,,1,0xFFFFFFFF,63,2,16,,1,1,0,{ bonus bAtk,50; .@r = getrefine(); bonus bLongAtkRate,.@r/3 * 2; if (.@r >= 7) { bonus2 bIgnoreDefRaceRate,RC_Demon,30; bonus2 bIgnoreDefRaceRate,RC_Brute,30; } ; if (.@r >= 9) { bonus2 bIgnoreDefRaceRate,RC_Demon,10; bonus2 bIgnoreDefRaceRate,RC_Brute,10; } ; if (.@r >= 11) { bonus2 bAddEle,Ele_Wind,10; bonus2 bAddEle,Ele_Earth,10; } ; },{},{}
+15368,SALTOS_DA_RAINHA_SCARABA_15368,Saltos da Rainha Scaraba,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15370,GALEA_DE_UNICORNIO_15370,G·lea de UnicÛrnio,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15371,ROUPA_DE_NATAL_DO_ANTONIO_15371,Roupa de Natal do Antonio,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15372,VESTES_DE_FREEONI_15372,Vestes de Freeoni,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15374,LUNAR_ECLIPSE_CLOTHES_15374,Lunar Eclipse Clothes,4,10,0,0,,,,1,0xFFFFFFFF,63,2,16,,,1,0,{},{},{}
+15375,ANCIENT_LUNAR_ECLIPSE_CLOTHES_15375,Ancient Lunar Eclipse Clothes,4,10,0,0,,,,1,0xFFFFFFFF,63,2,16,,,1,0,{},{},{}
+15383,TEMPORAL_TRANSCENDENT_ROBE_15383,Temporal Transcendent Robe,4,10,0,0,,,,1,0xFFFFFFFF,63,2,16,,,1,0,{},{},{}
+15385,ROBOZINHO_SABE_TUDO_15385,Robozinho Sabe-Tudo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15407,ARMADURA_DO_CAVALEIRO_BRANCO_15407,Armadura do Cavaleiro Branco,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15421,ROBE_DA_GRACA_DIVINA_15421,Robe da GraÁa Divina,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+15422,ROBE_MILAGROSO_15422,Robe Milagroso,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+16056,VETERAN_HAMMER_16056,Veteran Hammer,5,10,0,0,,,,3,0xFFFFFFFF,63,2,2,,,1,8,{},{},{}
+16074,MARTELO_COSMICO_16074,Martelo CÛsmico,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+16578,STEAM_SCROLL_16578,Steam Scroll,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+16579,PHOENIX_SCROLL_16579,Phoenix Scroll,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+16591,SUMMER_SCROLL_2_16591,Summer Scroll 2,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+16994,OVO_DO_ANO_NOVO_16994,Ovo do Ano Novo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+17033,PACOTE_DE_REVESTIMENTO_17033,Pacote de Revestimento,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+17178,???_???_BOX_???_17178,??? ??? Box(???),3,10,0,0,,,,,,,,,,,0,,{},{},{}
+17208,CAIXA_DO_PERGAMINHO_DO_EDDGA_17208,Caixa do Pergaminho do Eddga,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+17224,????_BOX_17224,???? Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+17269,XMAS_PARTY_EGG_17269,Xmas Party Egg,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+17305,SPRING_PARTY_EGG_17305,Spring Party Egg,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+17323,SHINOBI_EGG_17323,Shinobi Egg,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+17428,MOON_RABBIT_EGG_17428,Moon Rabbit Egg,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+17570,??_???_3_??_BOX_17570,?? ??? 3?? Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+18164,ROYAL_BOW_18164,Royal Bow,5,10,0,0,,,,2,0xFFFFFFFF,63,2,34,,,1,11,{},{},{}
+18170,NARCISSUS_BOW_18170,Narcissus Bow,5,10,0,0,,,,2,0xFFFFFFFF,63,2,34,,,1,11,{},{},{}
+18777,ALADDIN_LAMP_18777,Aladdin Lamp,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,897,{},{},{}
+18794,PLAIN_BLACK_MAGE_HAT_18794,Plain Black Mage Hat,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,912,{},{},{}
+18795,NIGHT_SPARROW_HAT_18795,Night Sparrow Hat,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,913,{},{},{}
+18804,THORNY_HAIRBAND_18804,Thorny Hairband,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,921,{},{},{}
+18809,7TH_ANNIVERSARY_HAT_18809,7th Anniversary Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,778,{},{},{}
+18833,MARIN_CROWN_18833,Marin Crown,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,948,{},{},{}
+18838,ANGELRING_WOOLLY_HAT_18838,Angelring Woolly Hat,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,953,{},{},{}
+18866,OWL_DUKE_SILK_HAT_18866,Owl Duke Silk Hat,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,982,{},{},{}
+18884,TATENASHI_HELMET_18884,Tatenashi Helmet,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,810,{},{},{}
+18907,DROOPING_PANDA_18907,Drooping Panda,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1029,{},{},{}
+18912,BELL_PIGEON_18912,Bell Pigeon,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1034,{},{},{}
+18913,GOSSIP_RAVEN_18913,Gossip Raven,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1035,{},{},{}
+18916,BEAR_BALLOON_18916,Bear Balloon,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1038,{},{},{}
+18941,HUNTING_CAP_OF_GUST_18941,Hunting Cap of Gust,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1076,{},{},{}
+18942,KNIT_CAP_OF_WATER_18942,Knit Cap of Water,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1077,{},{},{}
+18943,SILK_HAT_OF_EARTH_18943,Silk Hat of Earth,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1078,{},{},{}
+18957,BOINA_DO_9_ANIVERSARIO_18957,Boina do 9∫ Anivers·rio,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+18959,PINK_POO_POO_HAT_18959,Pink Poo Poo Hat,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1102,{},{},{}
+19029,ALICE_VON_FRIESINGER_HAT_69_19029,Alice Von Friesinger Hat 69,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1249,{},{},{}
+19097,PIAMETTE_RIBBON_19097,Piamette Ribbon,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1403,{},{},{}
+19098,PIAMETTE_HOOD_19098,Piamette Hood,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1087,{},{},{}
+19104,HEAVEN_WINGS_OF_IMPERIAL_DRAGON_19104,Heaven Wings of Imperial Dragon,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1413,{},{},{}
+19105,EXPLOSION_GUM_19105,Explosion Gum,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1414,{},{},{}
+19106,MAGICSTONE_OF_GRACE_19106,Magicstone of Grace,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1420,{},{},{}
+19110,VALHALLA_IDOL_19110,Valhalla Idol,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1423,{},{},{}
+19136,SPIRIT_OF_GREEN_MAIDEN_19136,Spirit of Green Maiden,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,882,{},{},{}
+19163,CATHARINA_VON_BRAD_60TH_19163,Catharina Von Brad 60th,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1527,{},{},{}
+19220,ELMO_GIGANTE_19220,Elmo Gigante,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19243,BLUE_REAR_RIBBON_19243,Blue Rear Ribbon,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1492,{},{},{}
+19244,ROSARIO_NECKLACE_19244,Rosario Necklace,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1471,{},{},{}
+19249,SPELL_CIRCUIT_19249,Spell Circuit,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1301,{},{},{}
+19252,ORELHAS_DE_KARDUI_19252,Orelhas de Kardui,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19257,VEU_DA_ARCEBISPA_19257,VÈu da Arcebispa,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19263,GENERALS_HELM_19263,General's Helm,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,729,{},{},{}
+19265,SMOKEYS_TRANSFORMATION_LEAF_19265,Smokey's Transformation Leaf,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1646,{},{},{}
+19268,GIGANT_SNAKES_BREATH_19268,Gigant Snake's Breath,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1050,{},{},{}
+19271,CHAPEU_DO_TIGRE_BRANCO_19271,ChapÈu do Tigre Branco,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19288,COSTUME_GIANTS_HELM_19288,Costume Giant's Helm,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1221,{},{},{}
+19290,COSTUME_ELDER_DEVIL_HORN_19290,Costume Elder Devil Horn,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,757,{},{},{}
+19291,COSTUME_SHIBA_INU_19291,Costume Shiba Inu,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1669,{},{},{}
+19292,COSTUME_WILD_CAT_KNIT_CAP_19292,Costume Wild Cat Knit Cap,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1671,{},{},{}
+19294,COSTUME_CYBER_CAT_EAR_HEADPHONE_RED_19294,Costume Cyber Cat Ear Headphone(Red),4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1668,{},{},{}
+19296,CLASSICAL_FEATHER_HAT_19296,Classical Feather Hat,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1381,{},{},{}
+19300,DOG_OFFICER_19300,Dog Officer,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1601,{},{},{}
+19304,S_B_Y_W_19304,?S?b?Y?w????,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19305,LAMPIAO_DAS_FADAS_19305,Lampi„o das Fadas,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19308,AMISTR_BERET_19308,Amistr Beret,4,10,0,0,,,,1,0xFFFFFFFF,63,2,256,,,1,1294,{},{},{}
+19314,ROYAL_MANTLE_19314,Royal Mantle,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1697,{},{},{}
+19315,CHAPEU_DO_EDEN_19315,ChapÈu do …den,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19316,CAPUZ_DE_ESQUILO_19316,Capuz de Esquilo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19318,ROSARIO_DA_GUARDA_REAL_19318,Ros·rio da Guarda Real,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19321,POMBINHO_BRANCO_19321,Pombinho Branco,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19393,PEDRA_DO_DESBRAVADOR_19393,Pedra do Desbravador,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19443,TAPA_OLHO_COSMICO_19443,Tapa-Olho CÛsmico,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19444,TAPA_OLHO_COSMICO_19444,Tapa-Olho CÛsmico,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19455,DIADEMA_DO_PARAISO_19455,Diadema do ParaÌso,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19456,MASCARA_DO_TENGU_CORVO_19456,M·scara do Tengu Corvo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19679,COSTUME_ROUND_EYES_J_19679,Costume Round Eyes J,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+19680,COSTUME_TONGUE_MASK_19680,Costume Tongue Mask,4,10,0,0,,,,0,0xFFFFFFFF,63,2,512,,,1,253,{},{},{}
+19681,COSTUME_SILVER_TIARA_19681,Costume Silver Tiara,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,218,{},{},{}
+19683,COSTUME_SWEET_CANDY_19683,Costume Sweet Candy,4,10,0,0,,,,0,0xFFFFFFFF,63,2,2048,,,1,414,{},{},{}
+19684,COSTUME_HAPPY_WIG_19684,Costume Happy Wig,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,305,{},{},{}
+19703,COSTUME_BLACK_AFRO_WIG_19703,Costume Black Afro Wig,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,969,{},{},{}
+19704,COSTUME_RED_AFRO_WIG_19704,Costume Red Afro Wig,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,970,{},{},{}
+19705,COSTUME_YELLOW_AFRO_WIG_19705,Costume Yellow Afro Wig,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,971,{},{},{}
+19840,COSTUME_SOLAR_GOLD_HELM_19840,Costume Solar Gold Helm,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,138,{},{},{}
+19868,COSTUME_SHOWY_HIGH_CAP_19868,Costume Showy High Cap,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,830,{},{},{}
+19873,COSTUME_CARNIVAL_HAT_19873,Costume Carnival Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,505,{},{},{}
+19874,COSTUME_CARNIVAL_CIRCLET_19874,Costume Carnival Circlet,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,506,{},{},{}
+19875,COSTUME_LOVE_RABBIT_HOOD_19875,Costume Love Rabbit Hood,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,549,{},{},{}
+19877,COSTUME_EYES_OF_DARKNESS_19877,Costume Eyes of Darkness,4,10,0,0,,,,0,0xFFFFFFFF,63,2,2048,,,1,467,{},{},{}
+19879,COSTUME_BLACK_BUNNY_BAND_19879,Costume Black Bunny Band,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,267,{},{},{}
+19880,COSTUME_GOLDEN_TIARA_19880,Costume Golden Tiara,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,232,{},{},{}
+19881,COSTUME_PRETTY_RABBIT_HOOD_19881,Costume Pretty Rabbit Hood,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1085,{},{},{}
+19892,COSTUME_NIGHT_SPARROW_HAT_19892,Costume Night Sparrow Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,913,{},{},{}
+19893,COSTUME_ORDINARY_BLACK_MAGICIAN_HAT_19893,Costume Ordinary Black Magician Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,912,{},{},{}
+19894,COSTUME_SHRINE_MAIDEN_HAT_19894,Costume Shrine Maiden Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,908,{},{},{}
+19895,COSTUME_MAGICIANS_NIGHT_CAP_19895,Costume Magician's Night Cap,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,911,{},{},{}
+19904,COSTUME_SKULL_CAP_19904,Costume Skull Cap,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,713,{},{},{}
+19905,COSTUME_SECRET_SOCIETY_HOOD_19905,Costume Secret Society Hood,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,806,{},{},{}
+19907,COSTUME_FASCINATING_PHANTOM_MASK_19907,Costume Fascinating Phantom Mask,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,710,{},{},{}
+19908,COSTUME_FLAG_CROWN_HAT_19908,Costume Flag Crown Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,219,{},{},{}
+19911,COSTUME_TRIANGLE_ROOF_HAT_19911,Costume Triangle Roof Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1099,{},{},{}
+19912,COSTUME_CAT_EYE_19912,Costume Cat Eye,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1100,{},{},{}
+19915,COSTUME_LITTLE_DEVILS_HORN_19915,Costume Little Devil's Horn,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1103,{},{},{}
+19924,COSTUME_ODINS_MASK_19924,Costume Odin's Mask,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,480,{},{},{}
+19944,COSTUME_GODDESS_OF_VICTORY_PURPLE_19944,Costume Goddess of Victory(Purple),4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,579,{},{},{}
+19951,COSTUME_CARDBOARD_BOX_19951,Costume Cardboard Box,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,450,{},{},{}
+20290,COSTUME_BLACK_EVIL_DRUID_HAT_20290,Costume Black Evil Druid Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1337,{},{},{}
+20306,COSTUME_ARTIST_HAT_20306,Costume Artist Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1344,{},{},{}
+20344,COSTUME_HAPPY_BALLOON_20344,Costume Happy Balloon,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1289,{},{},{}
+20395,COSTUME_BLACK_WITCH_HAT_20395,Costume Black Witch Hat,4,10,0,0,,,,0,0xFFFFFFFF,63,2,256,,,1,1006,{},{},{}
+20410,COSTUME_BONE_HEAD_20410,Costume Bone Head,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,401,{},{},{}
+20443,COSTUME_UNICORN_HELM_20443,Costume Unicorn Helm,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1375,{},{},{}
+20472,COSTUME_HELM_OF_ANGEL_20472,Costume Helm of Angel,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,110,{},{},{}
+20482,COSTUME_BIRDCAGE_OF_PARADISE_20482,Costume Birdcage of Paradise,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1286,{},{},{}
+20517,COSTUME_GIANT_CAT_BAG_20517,Costume Giant Cat Bag,4,10,0,0,,,,0,0xFFFFFFFF,63,2,4,,,1,25,{},{},{}
+20521,MIAU_CHILA_DE_BICHANO_PRETO_20521,Miau-chila de Bichano Preto,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20527,ASAS_DA_BORBOLETA_DO_VALE_20527,Asas da Borboleta do Vale,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20528,COSTUME_GOLDEN_BUTTERFLY_WINGS_20528,Costume Golden Butterfly Wings,4,10,0,0,,,,0,0xFFFFFFFF,63,2,4,,,1,36,{},{},{}
+20530,COSTUME_WINGS_OF_GABRIEL_20530,Costume Wings of Gabriel,4,10,0,0,,,,0,0xFFFFFFFF,63,2,4,,,1,37,{},{},{}
+20570,??_??_??_?_20570,?? ?? ?? ?,4,10,0,0,,,,0,0xFFFFFFFF,63,2,4,,,1,47,{},{},{}
+20571,VOO_DAS_VALQUIRIAS_20571,Voo das ValquÌrias,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20574,MOCHILA_DO_ALUNO_REBELDE_20574,Mochila do Aluno Rebelde,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20575,MOCHILA_DO_ALUNO_ESPERTO_20575,Mochila do Aluno Esperto,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20576,GARFO_DO_GLUTAO_20576,Garfo do Glut„o,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20582,MOCHILA_DO_PIMPAO_20582,Mochila do Pimp„o,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20594,LACO_POMPOSO_20594,LaÁo Pomposo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20765,COSTUME_ARCHANGELS_WINGS_20765,Costume Archangel's Wings,4,10,0,0,,,,0,0xFFFFFFFF,63,2,4,,,1,1,{},{},{}
+20806,MAGNUM_BREAK_AMISTR_BAG_20806,Magnum Break Amistr Bag,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,4,{},{},{}
+20816,YOICHIS_SHAWL_20816,Yoichi's Shawl,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+20842,CANDY_POUCH_BAG_PHYSICAL_20842,Candy Pouch Bag(Physical),4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,13,{},{},{}
+20843,CANDY_POUCH_BAG_RANGED_20843,Candy Pouch Bag(Ranged),4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,13,{},{},{}
+20844,CANDY_POUCH_BAG_MAGICAL_20844,Candy Pouch Bag(Magical),4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,13,{},{},{}
+20853,RUDOS_BLACK_FEATHERS_20853,Rudo's Black Feathers,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+20904,BATA_DE_ETRAN_20904,Bata de Etran,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20908,MANTO_DA_BRUXA_20908,Manto da Bruxa,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20909,HAORI_DE_BATALHA_20909,Haori de Batalha,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+20939,TEMPORAL_TRANSCENDENCE_MANTEAU_20939,Temporal Transcendence Manteau,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+20963,TEMPORAL_STR_MANTEAU_20963,Temporal Str Manteau,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+20964,TEMPORAL_AGI_MANTEAU_20964,Temporal AGI Manteau,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+20965,TEMPORAL_VIT_MANTEAU_20965,Temporal VIT Manteau,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+20966,TEMPORAL_INT_MANTEAU_20966,Temporal INT Manteau,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+20967,TEMPORAL_DEX_MANTEAU_20967,Temporal DEX Manteau,4,10,0,40,,38,,1,0xFFFFFFFF,63,2,4,,100,0,0,{ .@r = getrefine(); if (.@r > 0 && .@r % 2 == 0) { bonus bLongAtkRate,.@r/2; } if (.@r >= 7) { bonus2 bIgnoreDefRaceRate,RC_Demon,30; bonus2 bIgnoreDefRaceRate,RC_Brute,30; } ; if (.@r >= 9) { bonus2 bIgnoreDefRaceRate,RC_Demon,10; bonus2 bIgnoreDefRaceRate,RC_Brute,10; } ; if (.@r >= 11) { bonus2 bAddEle,Ele_Wind,10; bonus2 bAddEle,Ele_Earth,10; } ; },{},{}
+20968,TEMPORAL_LUK_MANTEAU_20968,Temporal LUK Manteau,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+20973,MANTO_DOS_ESPIRITOS_20973,Manto dos EspÌritos,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+21024,VETERAN_SWORD_21024,Veteran Sword,5,10,0,0,,,,3,0xFFFFFFFF,63,2,2,,,1,3,{},{},{}
+21038,ORIENTAL_SWORD_21038,Oriental Sword,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,3,{},{},{}
+21042,ESPADA_ONIMARU_21042,Espada Onimaru,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+21053,ESPADA_TODA_PODEROSA_21053,Espada Toda Poderosa,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+22070,ANCIENT_SANDALS_22070,Ancient Sandals,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+22071,APPLAUSE_SANDALS_22071,Applause Sandals,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+22129,HEROIC_BOOTS_22129,Heroic Boots,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+22149,BOTAS_COM_ESPIGOES_22149,Botas com Espigıes,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+22182,SAPATOS_DA_PENITENCIA_22182,Sapatos da PenitÍncia,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+22191,SAPATO_INFERNAL_22191,Sapato Infernal,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+22203,?_P_U_C_22203,?????????p?uÅ?c,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+22204,TEMPORAL_TRANSCENDENCE_BOOTS_22204,Temporal Transcendence Boots,4,10,0,0,,,,1,0xFFFFFFFF,63,2,4,,,1,0,{},{},{}
+22819,TRUE_ALMIGHTY_22819,True Almighty,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+22991,FOOTBALL_CAKE_22991,Football Cake,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23044,ELVIRA_CANDY_23044,Elvira Candy,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23045,MONT_BLANC_CAKE_23045,Mont Blanc Cake,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23073,????_BOOTS_BOX_23073,???? Boots Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23079,??_??_???_23079,?? ?? ???,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23135,??_??_23135,?? ??,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23202,MULLED_WINE_23202,Mulled Wine,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23259,STRAWBERRY_CREAM_CUPCAKE_23259,Strawberry Cream Cupcake,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23260,PARFAIT_FRUIT_23260,Parfait Fruit,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23261,CHEWY_MACARON_23261,Chewy Macaron,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23460,BOLSA_MAGICA_23460,Bolsa M·gica,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23548,ICE_CANDY_23548,Ice Candy,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23549,SNOW_COOKIE_23549,Snow Cookie,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23550,WINTER_COOKIE_23550,Winter Cookie,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23551,FESTIE_COOKIE_23551,Festie Cookie,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23552,FLORA_COOKIE_23552,Flora Cookie,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+23553,??_??_GIFT_BOX_23553,?? ?? Gift Box,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25169,STICKY_MUCUS_25169,Sticky Mucus,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25245,PILE_OF_SMALL_BONES_25245,Pile of Small Bones,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25251,FERMENTED_GRAPE_JUICE_25251,Fermented Grape Juice,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25252,HOLLY_SPRIG_25252,Holly Sprig,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25253,BOX_OF_SUGAR_25253,Box of Sugar,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25254,FIREWOOD_25254,Firewood,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25275,TICKET_DE_UNICORNIO_25275,Ticket de UnicÛrnio,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25291,PRODUCT_CHOCOLATE_25291,Product Chocolate,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25292,STOLEN_COCOA_BEANS_25292,Stolen Cocoa Beans,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25401,??_?_25401,?? ?,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25402,FADA_CAPTURADA_25402,Fada Capturada,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25403,MOEDA_DE_FADA_25403,Moeda de Fada,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25408,??_MEMORY_25408,?? Memory,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25421,DECORATIVE_PUMPKIN_25421,Decorative Pumpkin,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25422,DRIED_WHITE_THIN_STEM_25422,Dried White Thin Stem,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25482,CARTAO_DA_LIGA_DA_TERRA_25482,Cart„o da Liga da Terra,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25483,CARTAO_DA_LIGA_DO_FOGO_25483,Cart„o da Liga do Fogo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25484,CARTAO_DA_LIGA_DA_AGUA_25484,Cart„o da Liga da ¡gua,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25485,CARTAO_DA_LIGA_DO_VENTO_25485,Cart„o da Liga do Vento,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25486,INSIGNIA_DO_ORGULHO_VERMELHO_25486,InsÌgnia do Orgulho Vermelho,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25487,INSIGNIA_DO_ORGULHO_AZUL_25487,InsÌgnia do Orgulho Azul,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25488,INSIGNIA_DO_ORGULHO_VERDE_25488,InsÌgnia do Orgulho Verde,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25489,INSIGNIA_DO_ORGULHO_AMARELO_25489,InsÌgnia do Orgulho Amarelo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+25737,MOEDA_DO_EXPLORADOR_25737,Moeda do Explorador,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+26118,SHADOW_STAFF_26118,Shadow Staff,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,10,{},{},{}
+28025,KATARES_DO_MONARCA_28025,Katares do Monarca,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28039,KATAR_OF_SHIVER_28039,Katar of Shiver,5,10,0,0,,,,2,0xFFFFFFFF,63,2,34,,,1,16,{},{},{}
+28114,VETERAN_AXE_28114,Veteran Axe,5,10,0,0,,,,3,0xFFFFFFFF,63,2,2,,,1,7,{},{},{}
+28130,AVENGER_28130,Avenger,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,7,{},{},{}
+28319,CAUDA_DAEMONICA_28319,Cauda Daemonica,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28394,KING_OF_SPIRIT_RING_28394,King of Spirit Ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28431,SPRINT_RING_28431,Sprint ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28432,SPIRITUAL_RING_28432,Spiritual Ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28505,DEMONS_RING_28505,Demon's Ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28515,ANEL_IMPERIAL_28515,Anel Imperial,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28517,KING_OF_ABYSS_RING_28517,King of Abyss Ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28534,RKC_PARTICIPANT_MEMORIAL_RING_28534,RKC Participant Memorial Ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28535,RKC_WINNER_MEMORIAL_RING_28535,RKC Winner Memorial Ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28537,COLAR_DE_JUPEROS_28537,Colar de Juperos,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28538,LUVAS_DE_H_MOTTO_28538,Luvas de H. Motto,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28552,FIERY_FLAME_AND_WHITE_DEMON_RING_28552,Fiery Flame and White Demon Ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28561,RING_OF_BRAVE_28561,Ring of Brave,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28572,BROCHE_DA_CELINE_28572,Broche da Celine,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28596,TOY_RING_28596,Toy Ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+28617,BIBLIA_SAGRADA_28617,BÌblia Sagrada,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28630,EXORICISTS_BIBLE_28630,Exoricist's Bible,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,15,{},{},{}
+28728,ADAGA_DAS_VALQUIRIAS_28728,Adaga das ValquÌrias,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28737,HAZE_DEMON_BLADE_28737,Haze Demon Blade,5,10,0,0,,,,3,0xFFFFFFFF,63,2,2,,,1,1,{},{},{}
+28739,LACMA_28739,Lacma,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28744,MADO_SWORD_28744,Mado Sword,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,1,{},{},{}
+28912,RUDOS_PAPER_ROLL_28912,Rudo's Paper Roll,5,10,0,0,,,,1,0xFFFFFFFF,63,2,32,,,1,1,{},{},{}
+28927,KINGS_GUARD_28927,King's Guard,5,10,0,0,,,,1,0xFFFFFFFF,63,2,32,,,1,1,{},{},{}
+28933,ESCUDO_DE_FERRO_28933,Escudo de Ferro,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28940,GODS_SHIELD_28940,God's Shield,5,10,0,0,,,,1,0xFFFFFFFF,63,2,32,,,1,1,{},{},{}
+28944,ESCUDO_DE_SLEIPORING_28944,Escudo de Sleiporing,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+28947,ESCUDO_DE_GAIA_28947,Escudo de Gaia,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+29135,SHARP_LV_1_29135,Sharp Lv1,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+29136,SHARP_LV_2_29136,Sharp Lv2,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+29137,SHARP_LV_3_29137,Sharp Lv3,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+29138,SHARP_LV_4_29138,Sharp Lv4,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31024,IMMORTAL_CURSED_KNIGHT_CARD_31024,Immortal Cursed Knight Card,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31025,IMMORTAL_WIND_GHOST_CARD_31025,Immortal Wind Ghost Card,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31026,STEPHANE_JACK_EARNEST_WOLF_CARD_31026,Stephane Jack Earnest Wolf Card,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31108,BALAO_DE_FALA_ABRACOS_GRATIS_31108,Bal„o de Fala (AbraÁos Gr·tis),3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31109,BALAO_DE_FALA_RECRUTO_PARA_CLA_31109,Bal„o de Fala (Recruto para Cl„),3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31110,BALAO_DE_FALA_PROCURO_GRUPO_31110,Bal„o de Fala (Procuro Grupo),3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31111,BALAO_DE_FALA_PROCURO_MEMBROS_31111,Bal„o de Fala (Procuro Membros),3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31112,BALAO_DE_FALA_HUE_HUE_BR_31112,Bal„o de Fala (Hue Hue Br),3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31159,CHAPEU_DE_JORMUNGAND_31159,ChapÈu de Jormungand,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31259,TIARA_DOS_ARCH_ANGELING_31259,Tiara dos ArchAngeling,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31388,??_??_??_??_31388,?? ?? ?? ??,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31445,FEDORA_DE_COMODO_31445,Fedora de Comodo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31480,GIOIA_DORMINHOCO_31480,Gioia Dorminhoco,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31482,COSTUME_???_???_31482,Costume ??? ???,4,10,0,0,,,,0,0xFFFFFFFF,63,2,1024,,,1,1732,{},{},{}
+31530,ELMO_DE_ARIES_31530,Elmo de ¡ries,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31568,ESPIRITOS_TAIJI_31568,EspÌritos Taiji,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31587,SUPER_CAPACETE_DE_KUNLUN_31587,Super Capacete de Kunlun,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31617,PELUCIA_DE_LADY_TANEE_31617,Pel˙cia de Lady Tanee,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31626,ASAS_DOS_QUERUBINS_31626,Asas dos Querubins,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31700,CACHECOL_DOS_CORAJOSOS_31700,Cachecol dos Corajosos,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31905,PERUCA_DAS_ASINHAS_CELESTES_31905,Peruca das Asinhas Celestes,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+31906,GORRO_DO_GATINHO_AMOROSO_31906,Gorro do Gatinho Amoroso,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+32018,AQUATIC_SPEAR_32018,Aquatic Spear,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,4,{},{},{}
+32205,ANEL_DE_ESMERALDA_32205,Anel de Esmeralda,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+32221,TEMPORAL_TRANSCENDENCE_RING_32221,Temporal Transcendence Ring,4,10,0,0,,,,1,0xFFFFFFFF,63,2,136,,,0,0,{},{},{}
+32243,ANEL_DO_DESBRAVADOR_32243,Anel do Desbravador,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+400006,COCAR_DO_ORC_HEROI_400006,Cocar do Orc HerÛi,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+410004,MARCAS_DE_COMODO_410004,Marcas de Comodo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+490013,ANEL_DO_SUBMUNDO_490013,Anel do Submundo,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+490031,CAUDA_DE_PETAL_490031,Cauda de Petal,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+490085,ANEL_DA_EVOLUCAO_490085,Anel da EvoluÁ„o,3,10,0,0,,,,,,,,,,,0,,{},{},{}
+500004,SLATE_SWORD_500004,Slate Sword,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,2,{},{},{}
+570002,TRUMPET_SHELL_570002,Trumpet Shell,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,13,{},{},{}
+580002,BARBED_WIRE_WHIP_580002,Barbed Wire Whip,5,10,0,0,,,,2,0xFFFFFFFF,63,2,2,,,1,14,{},{},{}
