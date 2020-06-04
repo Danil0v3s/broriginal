@@ -671,6 +671,7 @@
 	export_constant2("bUnbreakableArmor",SP_UNBREAKABLE_ARMOR);
 	export_constant2("bUnbreakableHelm",SP_UNBREAKABLE_HELM);
 	export_constant2("bUnbreakableShield",SP_UNBREAKABLE_SHIELD);
+	export_constant2("bShortAtkRate",SP_SHORT_ATK_RATE);
 	export_constant2("bLongAtkRate",SP_LONG_ATK_RATE);
 	export_constant2("bCritAtkRate",SP_CRIT_ATK_RATE);
 	export_constant2("bCriticalAddRace",SP_CRITICAL_ADDRACE);
@@ -1582,6 +1583,9 @@
 	export_constant(SC_REF_T_POTION);
 	export_constant(SC_ADD_ATK_DAMAGE);
 	export_constant(SC_ADD_MATK_DAMAGE);
+	export_constant(SC_SOUNDOFDESTRUCTION);
+	export_constant(SC_LUXANIMA);
+	export_constant(SC_REUSE_LIMIT_LUXANIMA);
 #ifdef RENEWAL
 	export_constant(SC_EXTREMITYFIST2);
 #endif
@@ -3499,6 +3503,7 @@
 	export_constant(EFST_MAGIC_POISON);
 	export_constant(EFST_KAUTE);
 	export_constant(EFST_JPNONLY_TACTICS);
+	export_constant(EFST_MADOGEAR);
 	export_constant(EFST_LUXANIMA);
 	export_constant(EFST_BATH_FOAM_A);
 	export_constant(EFST_BATH_FOAM_B);
@@ -7519,7 +7524,6 @@
 	export_constant(INF2_ALLOWONMADO);
 	export_constant(INF2_TARGETMANHOLE);
 	export_constant(INF2_TARGETHIDDEN);
-	export_constant(INF2_INCREASEGLOOMYDAYDAMAGE);
 	export_constant(INF2_INCREASEDANCEWITHWUGDAMAGE);
 	export_constant(INF2_IGNOREWUGBITE);
 	export_constant(INF2_IGNOREAUTOGUARD);

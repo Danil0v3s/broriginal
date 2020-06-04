@@ -628,7 +628,6 @@ struct Battle_Config
 	int exp_cost_inspiration;
 	int mvp_exp_reward_message;
 	int can_damage_skill; //Which BL types can damage traps
-	int reserved_costume_id;
 	int atcommand_levelup_events;
 	int atcommand_disable_npc;
 	int block_account_in_same_party;
@@ -676,8 +675,11 @@ struct Battle_Config
 	int idletime_hom_option;
 	int devotion_standup_fix;
 	int feature_bgqueue;
+	int bgqueue_nowarp_mapflag;
 	int homunculus_exp_gain;
-	int feature_refineui;
+	int rental_item_novalue;
+	int ping_timer_interval;
+	int ping_time;
 
 #include "../custom/battle_config_struct.inc"
 };

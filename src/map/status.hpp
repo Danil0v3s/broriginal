@@ -941,6 +941,10 @@ enum sc_type : int16 {
 	SC_ADD_MATK_DAMAGE,
 
 	SC_HELPANGEL,
+	SC_SOUNDOFDESTRUCTION,
+
+	SC_LUXANIMA,
+	SC_REUSE_LIMIT_LUXANIMA,
 
 #ifdef RENEWAL
 	SC_EXTREMITYFIST2, //! NOTE: This SC should be right before SC_MAX, so it doesn't disturb if RENEWAL is disabled
@@ -2042,6 +2046,8 @@ enum efst_types : short{
 	EFST_KAUTE,
 
 	EFST_JPNONLY_TACTICS = 1147,
+
+	EFST_MADOGEAR = 1149,
 
 	EFST_LUXANIMA = 1154,
 	EFST_BATH_FOAM_A,
