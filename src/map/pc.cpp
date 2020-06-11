@@ -5486,7 +5486,7 @@ enum e_additem_result pc_cart_additem(struct map_session_data *sd,struct item *i
 		return ADDITEM_INVALID;
 	}
 
-	if( (w = data->weight*amount) + sd->cart_weight > sd->cart_weight_max )
+	if( (w = data->weight*amount) + sd->cart_weight > sd->cart_weight_max && !sd->state.romarket)
 		return ADDITEM_OVERWEIGHT;
 
 	i = MAX_CART;

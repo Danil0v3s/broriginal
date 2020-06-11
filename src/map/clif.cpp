@@ -13599,6 +13599,7 @@ void clif_parse_OpenVending(int fd, struct map_session_data* sd){
 	short len = (short)RFIFOW(fd,info->pos[0]);
 	const char* message = RFIFOCP(fd,info->pos[1]);
 	const uint8* data = (uint8*)RFIFOP(fd,info->pos[3]);
+	const struct item* items;
 
 	if(cmd == 0x12f){ // (CZ_REQ_OPENSTORE)
 		len -= 84;
@@ -13626,6 +13627,18 @@ void clif_parse_OpenVending(int fd, struct map_session_data* sd){
 	}
 
 	if( message[0] == '\0' ) // invalid input
+		if (sd->state.romarket) {
+			items = sd->cart.u.items_cart;
+			for (int i = 0; i < MAX_CART; ++i) {
+				const struct item* it = &items[i];
+				struct item_data* itd;
+
+				if (it->nameid == 0 || (itd = itemdb_exists(it->nameid)) == NULL)
+					continue;
+
+				pc_getitemfromcart(sd, i, it->amount);
+			}
+		}
 		return;
 
 	vending_openvending(sd, message, data, len/8, NULL);

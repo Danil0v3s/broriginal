@@ -10272,12 +10272,28 @@ ACMD_FUNC(refineui)
 ACMD_FUNC(romarket)
 {
 	nullpo_retr(-1, sd);
+
+	const struct item* items;
+
 	sd->state.romarket = true;
-	int f = sd->fd;
-	WFIFOHEAD(f, packet_len(0x12d));
-	WFIFOW(f, 0) = 0x12d;
-	WFIFOW(f, 2) = 4;
-	WFIFOSET(f, packet_len(0x12d));
+	items = sd->inventory.u.items_inventory;
+
+	for (int i = 0; i < MAX_INVENTORY; i++) {
+		const struct item* it = &items[i];
+		struct item_data* itd;
+
+		if (it->nameid == 0 || (itd = itemdb_exists(it->nameid)) == NULL)
+			continue;
+
+		if (sd->inventory.u.items_inventory[i].equip == 0) {
+			pc_putitemtocart(sd, i, sd->inventory.u.items_inventory[i].amount);
+		}
+	}
+
+	WFIFOHEAD(sd->fd, packet_len(0x12d));
+	WFIFOW(sd->fd, 0) = 0x12d;
+	WFIFOW(sd->fd, 2) = 4;
+	WFIFOSET(sd->fd, packet_len(0x12d));
 
 	return 0;
 }
