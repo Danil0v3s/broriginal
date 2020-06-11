@@ -21376,7 +21376,7 @@ void clif_refineui_info( struct map_session_data* sd, uint16 index ){
 	struct item_data *id;
 	uint16 length;
 	struct refine_materials materials[REFINEUI_MAT_CNT];
-	uint8 i, material_count, blessing_count;
+	uint8 i, material_count;
 
 	// Get the item db reference
 	id = sd->inventory_data[index];

@@ -304,7 +304,7 @@ int8 vending_openvending(struct map_session_data* sd, const char* message, const
 	
 	nullpo_retr(false,sd);
 
-	if ( pc_isdead(sd) || !sd->state.prevend || pc_istrading(sd)) {
+	if (!sd->state.romarket && (pc_isdead(sd) || !sd->state.prevend || pc_istrading(sd))) {
 		return 1; // can't open vendings lying dead || didn't use via the skill (wpe/hack) || can't have 2 shops at once
 	}
 

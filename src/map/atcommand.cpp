@@ -10266,6 +10266,22 @@ ACMD_FUNC(refineui)
 #endif
 }
 
+/*
+ * Opens vending screen
+ */
+ACMD_FUNC(romarket)
+{
+	nullpo_retr(-1, sd);
+	sd->state.romarket = true;
+	int f = sd->fd;
+	WFIFOHEAD(f, packet_len(0x12d));
+	WFIFOW(f, 0) = 0x12d;
+	WFIFOW(f, 2) = 4;
+	WFIFOSET(f, packet_len(0x12d));
+
+	return 0;
+}
+
 #include "../custom/atcommand.inc"
 
 /**
@@ -10575,6 +10591,7 @@ void atcommand_basecommands(void) {
 		ACMD_DEF2("completequest", quest),
 		ACMD_DEF2("checkquest", quest),
 		ACMD_DEF(refineui),
+		ACMD_DEF(romarket),
 	};
 	AtCommandInfo* atcommand;
 	int i;
