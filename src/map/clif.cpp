@@ -362,6 +362,9 @@ static int clif_send_sub(struct block_list *bl, va_list ap)
 	break;
 	}
 
+	if (src_bl->type == BL_NPC && !storm_has_npcvar(sd, (struct npc_data*)src_bl))
+		return 0;
+
 	if (session[fd] == NULL)
 		return 0;
 
@@ -2056,6 +2059,15 @@ void clif_selllist(struct map_session_data *sd)
 void clif_parse_NPCShopClosed(int fd, struct map_session_data *sd) {
 	// TODO: State tracking?
 	sd->npc_shopid = 0;
+
+	if (sd->openshop) {
+		if (sd->openshop->shop_item) {
+			aFree(sd->openshop->shop_item);
+			sd->openshop->shop_item = NULL;
+		}
+		aFree(sd->openshop);
+		sd->openshop = NULL;
+	}
 }
 
 /**
@@ -2108,7 +2120,6 @@ void clif_parse_NPCMarketClosed(int fd, struct map_session_data *sd) {
 	sd->npc_shopid = 0;
 	sd->state.trading = 0;
 }
-
 
 /// Purchase item from Market shop.
 void clif_npc_market_purchase_ack(struct map_session_data *sd, uint8 res, uint8 n, struct s_npc_buy_list *list) {
@@ -2522,14 +2533,28 @@ static void clif_addcards(unsigned char* buf, struct item* item)
 
 /// Fills in part of the item buffers that calls for variable bonuses data. [Napster]
 /// A maximum of 5 random options can be supported.
+#ifdef STORM_ITEM_DURABILITY
+void clif_add_random_options(unsigned char* buf, struct item *it, struct item_data* id) {
+#else
 void clif_add_random_options(unsigned char* buf, struct item *it) {
+#endif
 #if PACKETVER >= 20150225
 	int i;
 
 	for (i = 0; i < MAX_ITEM_RDM_OPT; i++) {
-		WBUFW(buf, i*5 + 0) = it->option[i].id;		// OptIndex
-		WBUFW(buf, i*5 + 2) = it->option[i].value;	// Value
-		WBUFB(buf, i*5 + 4) = it->option[i].param;	// Param1
+#ifdef STORM_ITEM_DURABILITY
+		if (battle_config.storm_item_durability && battle_config.storm_item_durability_random_option && !it->option[i].id && (i == 0 || it->option[i - 1].id) && (id->type == IT_WEAPON || (id->equip & battle_config.storm_item_armor_mask))) {
+			WBUFW(buf, i * 5 + 0) = STORM_ITEM_RANDOPT_ID;
+			WBUFW(buf, i * 5 + 2) = it->durability/10000;
+			WBUFW(buf, i * 5 + 4) = 0;
+		} else {
+#endif
+			WBUFW(buf, i * 5 + 0) = it->option[i].id;		// OptIndex
+			WBUFW(buf, i * 5 + 2) = it->option[i].value;	// Value
+			WBUFB(buf, i * 5 + 4) = it->option[i].param;	// Param1
+#ifdef STORM_ITEM_DURABILITY
+		}
+#endif
 	}
 	
 #if MAX_ITEM_RDM_OPT < 5
@@ -2599,7 +2624,11 @@ void clif_additem(struct map_session_data *sd, int n, int amount, unsigned char 
 #if PACKETVER >= 20071002
 		WFIFOW(fd,offs+27) = 0;  //  HireExpireDate
 #if PACKETVER >= 20150225
+#ifdef STORM_ITEM_DURABILITY
+		clif_add_random_options(WFIFOP(fd, offs + 31), &sd->inventory.u.items_inventory[n], sd->inventory_data[n]);
+#else
 		clif_add_random_options(WFIFOP(fd,offs+31), &sd->inventory.u.items_inventory[n]);
+#endif
 #if PACKETVER >= 20160921
 		WFIFOB(fd,offs+54) = 0; // Favorite
 		WFIFOW(fd,offs+55) = 0; // View ID
@@ -2639,7 +2668,11 @@ void clif_additem(struct map_session_data *sd, int n, int amount, unsigned char 
 		WFIFOW(fd,offs+27)=(sd->inventory.u.items_inventory[n].bound && !itemdb_isstackable(sd->inventory.u.items_inventory[n].nameid)) ? BOUND_DISPYELLOW : sd->inventory_data[n]->flag.bindOnEquip ? BOUND_ONEQUIP : 0;
 #endif
 #if PACKETVER >= 20150225
+#ifdef STORM_ITEM_DURABILITY
+		clif_add_random_options(WFIFOP(fd,31), &sd->inventory.u.items_inventory[n], sd->inventory_data[n]);
+#else
 		clif_add_random_options(WFIFOP(fd,31), &sd->inventory.u.items_inventory[n]);
+#endif
 #if PACKETVER >= 20160921
 		WFIFOB(fd,offs+54) = sd->inventory.u.items_inventory[n].favorite;
 		WFIFOW(fd,offs+55) = sd->inventory_data[n]->look;
@@ -2718,7 +2751,11 @@ void clif_item_sub_v5(unsigned char *buf, int n, int idx, struct item *it, struc
 #if PACKETVER >= 20150225
 		//V6_ITEM_Option
 		WBUFB(buf,n+30) = 0;	// nRandomOptionCnt
-		clif_add_random_options(WBUFP(buf, n+31), it);// optionData
+#ifdef STORM_ITEM_DURABILITY
+		clif_add_random_options(WBUFP(buf, n + 31), it, id);
+#else
+		clif_add_random_options(WBUFP(buf, n + 31), it);
+#endif
 		offset += 26;
 #endif
 		//V5_ITEM_flag
@@ -4430,7 +4467,11 @@ void clif_tradeadditem(struct map_session_data* sd, struct map_session_data* tsd
 		WBUFW(buf,15)= 0; //card (4w)
 		WBUFW(buf,17)= 0; //card (4w)
 #if PACKETVER >= 20150225
+#ifdef STORM_ITEM_DURABILITY
+		clif_add_random_options(WBUFP(buf, 19), &sd->inventory.u.items_inventory[index], sd->inventory_data[index]);
+#else
 		clif_add_random_options(WBUFP(buf, 19), &sd->inventory.u.items_inventory[index]);
+#endif
 #endif
 	}
 	else
@@ -4456,7 +4497,11 @@ void clif_tradeadditem(struct map_session_data* sd, struct map_session_data* tsd
 		WBUFB(buf,10)= sd->inventory.u.items_inventory[index].refine; //refine
 		clif_addcards(WBUFP(buf, 11), &sd->inventory.u.items_inventory[index]);
 #if PACKETVER >= 20150225
+#ifdef STORM_ITEM_DURABILITY
+		clif_add_random_options(WBUFP(buf, 19), &sd->inventory.u.items_inventory[index], sd->inventory_data[index]);
+#else
 		clif_add_random_options(WBUFP(buf, 19), &sd->inventory.u.items_inventory[index]);
+#endif
 #endif
 	}
 	WFIFOSET(fd,packet_len(cmd));
@@ -4599,7 +4644,11 @@ void clif_storageitemadded(struct map_session_data* sd, struct item* i, int inde
 	WFIFOB(fd,12+offset) = i->refine; //refine
 	clif_addcards(WFIFOP(fd,13+offset), i);
 #if PACKETVER >= 20150225
-	clif_add_random_options(WFIFOP(fd,21+offset), i);
+#ifdef STORM_ITEM_DURABILITY
+	clif_add_random_options(WFIFOP(fd, 21 + offset), i, sd->inventory_data[index]);
+#else
+	clif_add_random_options(WFIFOP(fd, 21 + offset), i);
+#endif
 #endif
 	WFIFOSET(fd,packet_len(cmd));
 }
@@ -4724,6 +4773,9 @@ void clif_getareachar_unit(struct map_session_data* sd,struct block_list *bl)
 	* Hide NPC from maya purple card.
 	**/
 	if(bl->type == BL_NPC && !((TBL_NPC*)bl)->chat_id && (((TBL_NPC*)bl)->sc.option&OPTION_INVISIBLE))
+		return;
+
+	if (bl->type == BL_NPC && !storm_has_npcvar(sd, (struct npc_data*)bl))
 		return;
 
 	ud = unit_bl2ud(bl);
@@ -6772,6 +6824,7 @@ void clif_item_identify_list(struct map_session_data *sd)
 		WFIFOSET(fd,WFIFOW(fd,2));
 		sd->menuskill_id = MC_IDENTIFY;
 		sd->menuskill_val = c;
+		sd->state.inventory_select = false;
 		sd->state.workinprogress = WIP_DISABLE_ALL;
 	}
 }
@@ -6974,7 +7027,11 @@ void clif_cart_additem(struct map_session_data *sd,int n,int amount,int fail)
 	WBUFB(buf,12+offset)=sd->cart.u.items_cart[n].refine;
 	clif_addcards(WBUFP(buf,13+offset), &sd->cart.u.items_cart[n]);
 #if PACKETVER >= 20150225
-	clif_add_random_options(WBUFP(buf,21+offset), &sd->cart.u.items_cart[n]);
+#ifdef STORM_ITEM_DURABILITY
+	clif_add_random_options(WBUFP(buf, 21 + offset), &sd->cart.u.items_cart[n], itemdb_search(sd->cart.u.items_cart[n].nameid));
+#else
+	clif_add_random_options(WBUFP(buf, 21 + offset), &sd->cart.u.items_cart[n]);
+#endif
 #endif
 	WFIFOSET(fd,packet_len(cmd));
 }
@@ -7340,7 +7397,11 @@ void clif_vendinglist(struct map_session_data* sd, int id, struct s_vending* ven
 		WFIFOB(fd,offset+13+i*item_length) = vsd->cart.u.items_cart[index].refine;
 		clif_addcards(WFIFOP(fd,offset+14+i*item_length), &vsd->cart.u.items_cart[index]);
 #if PACKETVER >= 20150225
-		clif_add_random_options(WFIFOP(fd,offset+22+i*item_length), &vsd->cart.u.items_cart[index]);
+#ifdef STORM_ITEM_DURABILITY
+		clif_add_random_options(WFIFOP(fd, offset + 22 + i * item_length), &vsd->cart.u.items_cart[index], itemdb_search(sd->cart.u.items_cart[index].nameid));
+#else
+		clif_add_random_options(WFIFOP(fd, offset + 22 + i * item_length), &vsd->cart.u.items_cart[index]);
+#endif
 #if PACKETVER >= 20160921
 		WFIFOL(fd,offset+47+i*item_length) = pc_equippoint_sub(sd,data);
 		WFIFOW(fd,offset+51+i*item_length) = data->look;
@@ -7429,7 +7490,11 @@ void clif_openvending(struct map_session_data* sd, int id, struct s_vending* ven
 		WFIFOB(fd,21+i*item_length) = sd->cart.u.items_cart[index].refine;
 		clif_addcards(WFIFOP(fd,22+i*item_length), &sd->cart.u.items_cart[index]);
 #if PACKETVER >= 20150225
-		clif_add_random_options(WFIFOP(fd,30+i*item_length), &sd->cart.u.items_cart[index]);
+#ifdef STORM_ITEM_DURABILITY
+		clif_add_random_options(WFIFOP(fd, 30 + i * item_length), &sd->cart.u.items_cart[index], itemdb_search(sd->cart.u.items_cart[index].nameid));
+#else
+		clif_add_random_options(WFIFOP(fd, 30 + i * item_length), &sd->cart.u.items_cart[index]);
+#endif
 #endif
 	}
 	WFIFOSET(fd,WFIFOW(fd,2));
@@ -10231,8 +10296,7 @@ static bool clif_process_message(struct map_session_data* sd, bool whisperFormat
 	if( is_atcommand( fd, sd, out_message, 1 )  )
 		return false;
 
-	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT))
-		return false; //no "chatting" while muted.
+	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT) || sd->special_state.no_chat)		return false; //no "chatting" while muted.
 
 	if( battle_config.min_chat_delay ) { //[Skotlex]
 		if (DIFF_TICK(sd->cantalk_tick, gettick()) > 0)
@@ -10486,6 +10550,14 @@ void clif_parse_LoadEndAck(int fd,struct map_session_data *sd)
 	// reset the callshop flag if the player changes map
 	sd->state.callshop = 0;
 
+	if (sd->openshop)
+	{
+		if (sd->openshop->shop_item)
+			aFree(sd->openshop->shop_item);
+		aFree(sd->openshop);
+		sd->openshop = NULL;
+	}
+
 	if(map_addblock(&sd->bl))
 		return;
 	clif_spawn(&sd->bl);
@@ -10615,6 +10687,10 @@ void clif_parse_LoadEndAck(int fd,struct map_session_data *sd)
 			sd->state.night = 1;
 			clif_status_load(&sd->bl, EFST_SKE, 1);
 		}
+
+#ifdef STORM_ITEM_STATUS
+		storm_itempassive(sd, 0, ICF_NONE);
+#endif
 
 		// Notify everyone that this char logged in [Skotlex].
 		map_foreachpc(clif_friendslist_toggle_sub, sd->status.account_id, sd->status.char_id, 1);
@@ -11841,7 +11917,19 @@ void clif_parse_NpcBuyListSend(int fd, struct map_session_data* sd)
 	uint16 n = (RFIFOW(fd,info->pos[0])-4) /4;
 	int result;
 
-	if( sd->state.trading || !sd->npc_shopid )
+	if (sd->state.trading)
+		result = 1;
+	else if (sd->openshop)
+	{
+		result = storm_openshop_buy(sd, (struct s_npc_buy_list*)RFIFOP(fd, info->pos[1]), n);
+
+		if (sd->openshop->shop_item)
+			aFree(sd->openshop->shop_item);
+
+		aFree(sd->openshop);
+		sd->openshop = NULL;
+	}
+	else if (!sd->npc_shopid )
 		result = 1;
 	else
 		result = npc_buylist(sd, n, (struct s_npc_buy_list*)RFIFOP(fd,info->pos[1]));
@@ -12850,6 +12938,21 @@ void clif_parse_ItemIdentify(int fd,struct map_session_data *sd) {
 
 	if (sd->menuskill_id != MC_IDENTIFY)
 		return;
+
+	if (sd->state.inventory_select)
+	{
+		sd->state.inventory_select = false;
+		sd->state.workinprogress = WIP_DISABLE_NONE;
+
+		if (idx < 0 || idx >= MAX_INVENTORY || sd->inventory.u.items_inventory[idx].nameid <= 0 || !sd->inventory_data[idx])
+			sd->npc_menu = 0xFFFF;
+		else
+			sd->npc_menu = idx;
+
+		clif_menuskill_clear(sd);
+		npc_scriptcont(sd, sd->npc_id, false);
+		return;
+	}
 
 	// Ignore the request
 	// - Invalid item index
@@ -15191,7 +15294,12 @@ void clif_Mail_setattachment(struct map_session_data* sd, int index, int amount,
 	WFIFOB(fd, 11) = item->attribute;
 	WFIFOB(fd, 12) = item->refine;
 	clif_addcards(WFIFOP(fd,13), item);
-	clif_add_random_options(WFIFOP(fd,21), item);
+
+#ifdef STORM_ITEM_DURABILITY
+	clif_add_random_options(WFIFOP(fd, 21), item, sd->inventory_data[index - 2]);
+#else
+	clif_add_random_options(WFIFOP(fd, 21), item);
+#endif
 
 	for( i = 0; i < MAIL_MAX_ITEM; i++ ){
 		if( sd->mail.item[i].nameid == 0 ){
@@ -15700,7 +15808,11 @@ void clif_Mail_read(struct map_session_data *sd, int mail_id)
 				// 2B unsigned short wItemSpriteNumber
 				//WFIFOW(fd, offset + 15 + 5) = data->view_id;
 				// 2B unsigned short bindOnEquipType
-				clif_add_random_options(WFIFOP(fd, offset + 15 + 9 ), item);
+#ifdef STORM_ITEM_DURABILITY
+				clif_add_random_options(WFIFOP(fd, offset + 15 + 9), item, data);
+#else
+				clif_add_random_options(WFIFOP(fd, offset + 15 + 9), item);
+#endif
 				offset += itemsize;
 			}
 		}
@@ -16489,6 +16601,15 @@ void clif_parse_cashshop_close( int fd, struct map_session_data* sd ){
 	sd->state.cashshop_open = false;
 	sd->npc_shopid = 0; // Reset npc_shopid when using cash shop from "cash shop" button [Aelys|Susu] bugreport:96
 	// No need to do anything here
+
+	if (sd->openshop)
+	{
+		if (sd->openshop->shop_item)
+			aFree(sd->openshop->shop_item);
+
+		aFree(sd->openshop);
+		sd->openshop = NULL;
+	}
 }
 
 //0846 <tabid>.W (CZ_REQ_SE_CASH_TAB_CODE))
@@ -16642,22 +16763,28 @@ void clif_cashshop_result( struct map_session_data *sd, unsigned short item_id, 
 void clif_parse_cashshop_buy(int fd, struct map_session_data *sd){
 	struct s_packet_db* info;
 	int cmd = RFIFOW(fd,0);
+	bool openshop = false;
 
 	nullpo_retv(sd);
 
+	openshop = sd->openshop != NULL;
+
 	info = &packet_db[cmd];
 
-	if( sd->state.trading || !sd->npc_shopid ) {
+	if( sd->state.trading || (!openshop && !sd->npc_shopid))
 		clif_cashshop_ack(sd,1);
-		return;
-	}
 	else {
 #if PACKETVER < 20101116
 		short nameid = RFIFOW(fd,info->pos[0]);
 		short amount = RFIFOW(fd,info->pos[1]);
 		int points   = RFIFOL(fd,info->pos[2]);
 
-		clif_cashshop_ack(sd,npc_cashshop_buy(sd, nameid, amount, points));
+		if (openshop) {
+			ShowWarning("The openshop; script command does not support cashshops at this packet version\n");
+			clif_cashshop_ack(sd, 4);
+		}
+		else
+			clif_cashshop_ack(sd,npc_cashshop_buy(sd, nameid, amount, points));
 #else
 		int s_itl = (cmd==0x848)?10:4; //item _list size (depend on cmd even for 2013+)
 		int len    = RFIFOW(fd,info->pos[0]);
@@ -16670,14 +16797,29 @@ void clif_parse_cashshop_buy(int fd, struct map_session_data *sd){
 			return;
 		}
 		if(cmd==0x848){
-			if (cashshop_buylist( sd, points, count, item_list))
-				clif_cashshop_ack(sd,0);
-			return;
+			if (openshop) {
+				if (storm_openshop_cashbuy(sd, points, count, item_list))
+					clif_cashshop_ack(sd, 0);
+			} else {
+				if (cashshop_buylist(sd, points, count, item_list))
+					clif_cashshop_ack(sd, 0);
+			}
 		} else {
-			clif_cashshop_ack(sd,npc_cashshop_buylist(sd,points,count,item_list));
-			return;
+			if (openshop)
+				clif_cashshop_ack(sd, storm_openshop_cashbuy(sd, points, count, item_list));
+			else
+				clif_cashshop_ack(sd,npc_cashshop_buylist(sd,points,count,item_list));
 		}
 #endif
+	}
+
+	if (sd->openshop)
+	{
+		if (sd->openshop->shop_item)
+			aFree(sd->openshop->shop_item);
+
+		aFree(sd->openshop);
+		sd->openshop = NULL;
 	}
 }
 
@@ -18515,7 +18657,11 @@ void clif_search_store_info_ack(struct map_session_data* sd)
 		it.amount = ssitem->amount;
 
 		clif_addcards(WFIFOP(fd,i*blocksize+25+MESSAGE_SIZE), &it);
-		clif_add_random_options(WFIFOP(fd,i*blocksize+31+MESSAGE_SIZE), &it);
+#ifdef STORM_ITEM_DURABILITY
+		clif_add_random_options(WFIFOP(fd, i*blocksize + 31 + MESSAGE_SIZE), &it, itemdb_search(it.nameid));
+#else
+		clif_add_random_options(WFIFOP(fd, i*blocksize + 31 + MESSAGE_SIZE), &it);
+#endif
 	}
 
 	WFIFOSET(fd,WFIFOW(fd,2));
@@ -18814,6 +18960,8 @@ int clif_autoshadowspell_list(struct map_session_data *sd) {
 			c++;
 		}
 
+	sd->state.skill_select = false;
+
 	if( c > 0 ) {
 		WFIFOW(fd,2) = 8 + c * 2;
 		WFIFOL(fd,4) = c;
@@ -18862,6 +19010,24 @@ int clif_skill_itemlistwindow( struct map_session_data *sd, uint16 skill_id, uin
 void clif_parse_SkillSelectMenu(int fd, struct map_session_data *sd) {
 	struct s_packet_db* info = &packet_db[RFIFOW(fd,0)];
 	//int type = RFIFOL(fd,info->pos[0]); //WHY_LOWERVER_COMPATIBILITY =  0x0, WHY_SC_AUTOSHADOWSPELL =  0x1,
+
+	// Stormbreaker skill select
+	if (sd->state.skill_select)
+	{
+		int skill = RFIFOW(fd, info->pos[1]);
+
+		sd->state.skill_select = false;
+		sd->state.workinprogress = WIP_DISABLE_NONE;
+
+		if (skill <= 0 || skill >= MAX_SKILL || skill_get_index(skill) == 0)
+			sd->npc_menu = 0xFFFF;
+		else
+			sd->npc_menu = skill;
+
+		clif_menuskill_clear(sd);
+		npc_scriptcont(sd, sd->npc_id, false);
+		return;
+	}
 
 	if (sd->menuskill_id == SA_AUTOSPELL) {
 		sd->state.workinprogress = WIP_DISABLE_NONE;
@@ -21220,6 +21386,626 @@ void clif_parse_equipswitch_request_single( int fd, struct map_session_data* sd 
 	pc_equipitem( sd, index, pc_equippoint(sd, index), true );
 #endif
 }
+
+/// Presents a list of items that can be selected (ZC_ITEMIDENTIFY_LIST).
+/// 0177 <packet len>.W { <name id>.W }*
+void clif_inventory_select_list(struct map_session_data* sd, int* positions, int count)
+{
+	int i, c;
+	int fd;
+
+	nullpo_retv(sd);
+	
+	fd = sd->fd;
+
+	if (!fd)
+		return;
+
+	WFIFOHEAD(fd, MAX_INVENTORY * 2 + 4);
+	WFIFOW(fd, 0) = 0x177;
+
+	for (i = 0, c = 0; i < count; i++)
+	{
+		int pos = positions[i];
+
+		if (pos < 0 || pos >= MAX_INVENTORY || !sd->inventory_data[pos])
+			continue;
+
+		WFIFOW(fd, c * 2 + 4) = pos + 2;
+		c++;
+	}
+
+	if (c > 0)
+	{
+		WFIFOW(fd, 2) = c * 2 + 4;
+		WFIFOSET(fd, WFIFOW(fd, 2));
+
+		sd->menuskill_id = MC_IDENTIFY;
+		sd->menuskill_val = c;
+		sd->state.inventory_select = true;
+		sd->state.workinprogress = WIP_DISABLE_ALL;
+	}
+}
+
+/// Presents a list of skills that can be selected
+/// 0442 <Length>.W <count>.L <Skill_list>.W (ZC_SKILL_SELECT_REQUEST).
+int clif_skill_select_list(struct map_session_data *sd, unsigned short* skills, int count) {
+	int i;
+	int fd;
+
+	nullpo_ret(sd);
+
+	fd = sd->fd;
+
+	if (!fd)
+		return 0;
+	
+	WFIFOHEAD(fd, 8 + count * 2);
+	WFIFOW(fd, 0) = 0x442;
+
+	for (i = 0; i < count; i++)
+		WFIFOW(fd, 8 + i * 2) = skills[i];
+	
+	WFIFOW(fd, 2) = 8 + count * 2;
+	WFIFOL(fd, 4) = count;
+	WFIFOSET(fd, WFIFOW(fd, 2));
+
+	sd->menuskill_id = SC_AUTOSHADOWSPELL;
+	sd->menuskill_val = count;
+
+	sd->state.skill_select = true;
+	sd->state.workinprogress = WIP_DISABLE_ALL;
+
+	return 1;
+}
+
+/// Presents list of items, that can be bought in an NPC shop (ZC_PC_PURCHASE_ITEMLIST).
+/// 00c6 <packet len>.W { <price>.L <discount price>.L <item type>.B <name id>.W }*
+void clif_openshop_buylist(struct map_session_data *sd)
+{
+	int fd, i, c;
+	bool discount;
+
+	nullpo_retv(sd);
+	nullpo_retv(sd->openshop);
+
+	fd = sd->fd;
+	WFIFOHEAD(fd, 4 + sd->openshop->count * 11);
+	WFIFOW(fd, 0) = 0xc6;
+
+	c = 0;
+	discount = npc_shop_discount2(sd->openshop->type, sd->openshop->discount);
+	for (i = 0; i < sd->openshop->count; i++)
+	{
+		struct item_data* id = itemdb_exists(sd->openshop->shop_item[i].nameid);
+		int val = sd->openshop->shop_item[i].value;
+		if (id == NULL)
+			continue;
+		WFIFOL(fd, 4 + c * 11) = val;
+		WFIFOL(fd, 8 + c * 11) = (discount) ? pc_modifybuyvalue(sd, val) : val;
+		WFIFOB(fd, 12 + c * 11) = itemtype(id->nameid);
+		WFIFOW(fd, 13 + c * 11) = (id->view_id > 0) ? id->view_id : id->nameid;
+		c++;
+	}
+
+	WFIFOW(fd, 2) = 4 + c * 11;
+	WFIFOSET(fd, WFIFOW(fd, 2));
+}
+
+/// List of items offered in a cash shop (ZC_PC_CASH_POINT_ITEMLIST).
+/// 0287 <packet len>.W <cash point>.L { <sell price>.L <discount price>.L <item type>.B <name id>.W }*
+/// 0287 <packet len>.W <cash point>.L <kafra point>.L { <sell price>.L <discount price>.L <item type>.B <name id>.W }* (PACKETVER >= 20070711)
+void clif_openshop_cashlist(struct map_session_data *sd)
+{
+	int fd, i, cost[2] = { 0, 0 };
+	openshoplist* shop;
+#if PACKETVER < 20070711
+	const int offset = 8;
+#else
+	const int offset = 12;
+#endif
+
+	nullpo_retv(sd);
+	nullpo_retv(sd->openshop);
+
+	fd = sd->fd;
+	shop = sd->openshop;
+
+	storm_openshop_currency(sd, cost, true);
+
+	WFIFOHEAD(fd, offset + shop->count * 11);
+	WFIFOW(fd, 0) = 0x287;
+	WFIFOW(fd, 2) = offset + shop->count * 11;
+	WFIFOL(fd, 4) = cost[0];
+#if PACKETVER >= 20070711
+	WFIFOL(fd, 8) = cost[1];
+#endif
+
+	for (i = 0; i < shop->count; i++) {
+		struct item_data* id = itemdb_search(shop->shop_item[i].nameid);
+		WFIFOL(fd, offset + 0 + i * 11) = shop->shop_item[i].value;
+		WFIFOL(fd, offset + 4 + i * 11) = shop->shop_item[i].value; // Discount Price
+		WFIFOB(fd, offset + 8 + i * 11) = itemtype(id->nameid);
+		WFIFOW(fd, offset + 9 + i * 11) = (id->view_id > 0) ? id->view_id : id->nameid;
+	}
+	WFIFOSET(fd, WFIFOW(fd, 2));
+}
+
+/**
+ * Sends the clif_getareachar_unit packet for the provided NPC.
+ *
+ * @param bl the npc
+ * @param ap the arguments
+ */
+static int clif_npc_getareachar_unit_sub(struct block_list* bl, va_list ap)
+{
+	struct npc_data* nd;
+	struct map_session_data* sd = va_arg(ap, struct map_session_data*);
+
+	if (!(nd = BL_CAST(BL_NPC, bl)) || !*nd->variable)
+		return 0;
+
+	if (storm_has_npcvar(sd, nd))
+		clif_getareachar_unit(sd, bl);
+	else
+		clif_clearunit_single(nd->bl.id, CLR_OUTSIGHT, sd->fd);
+
+	return 1;
+}
+
+/**
+ * Finds NPCs within range of the character which must now appear.
+ *
+ * @param sd the player
+ */
+void clif_npc_getareachar_unit(struct map_session_data* sd)
+{
+	nullpo_retv(sd);
+
+	map_foreachinrange(clif_npc_getareachar_unit_sub, &sd->bl, AREA_SIZE, BL_NPC, sd);
+}
+
+#ifdef STORM_BAZAAR
+
+/**
+ * Shows the bazaar shop window for the provided player.
+ *
+ * @param sd the player
+ * @param nd the shop
+ */
+void clif_bazaarshop_open(struct map_session_data* sd, struct npc_data* nd)
+{
+	int fd, i, j, c;
+	struct item_data* id;
+	bazaarlist list;
+#if PACKETVER < 20100105
+	const int cmd = 0x133;
+	const int offset = 8;
+#else
+	const int cmd = 0x800;
+	const int offset = 12;
+#endif
+
+#if PACKETVER < 20150225
+	const int item_length = 22;
+#elif PACKETVER < 20160921
+	const int item_length = 47;
+#else
+	const int item_length = 53;
+#endif
+
+	nullpo_retv(sd);
+	nullpo_retv(nd);
+
+	fd = sd->fd;
+
+	if (sd->state.trading)
+		return;
+	
+	list = storm_bazaar_list(sd, nd);
+
+	WFIFOHEAD(fd, offset + list.count * item_length);
+	WFIFOW(fd, 0) = cmd;
+	WFIFOW(fd, 2) = offset + list.count * item_length;
+	WFIFOL(fd, 4) = nd->bl.id;
+#if PACKETVER >= 20100105
+	WFIFOL(fd, 8) = nd->bl.id;
+#endif
+
+	for (i = 0, c = 0; i < list.count; i++)
+	{
+		int pos = offset + i * item_length;
+
+		if (list.items[i].nameid == 0 || !(id = itemdb_exists(list.items[i].nameid)))
+			continue;
+
+		WFIFOL(fd, pos + 0) = list.items[i].cost;
+		WFIFOW(fd, pos + 4) = list.items[i].amount;
+		WFIFOW(fd, pos + 6) = i + 2;
+		WFIFOB(fd, pos + 8) = itemtype(id->nameid);
+		WFIFOW(fd, pos + 9) = id->nameid;
+		WFIFOB(fd, pos + 11) = 1;
+		WFIFOB(fd, pos + 12) = 0;
+		WFIFOB(fd, pos + 13) = 0;
+		WFIFOW(fd, pos + 14) = 0; // card1
+		WFIFOW(fd, pos + 16) = 0; // card2
+		WFIFOW(fd, pos + 18) = 0; // card3
+		WFIFOW(fd, pos + 20) = 0; // card4
+
+#if PACKETVER >= 20150225
+		for (j = 0; j < 5; j++)
+		{
+			int opt = pos + 22 + j * 5;
+
+			WFIFOW(fd, opt + 0) = 0;
+			WFIFOW(fd, opt + 2) = 0;
+			WFIFOB(fd, opt + 4) = 0;
+		}
+#endif
+
+#if PACKETVER >= 20160921
+		WFIFOL(fd, pos + 47) = pc_equippoint_sub(sd, id);
+		WFIFOW(fd, pos + 51) = id->look;
+#endif
+	}
+
+	WFIFOSET(fd, WFIFOW(fd, 2));
+
+	sd->bazaar_shop_id = nd->bl.id;
+}
+
+#endif
+
+#if PACKETVER >= 20161012
+
+/**
+ * Calculates the item information at the current index within the material list.
+ *
+ * @param item the item
+ * @param id the item data
+ * @param list the material list
+ * @param type the material type
+ */
+static void clif_refine_material_sub(struct item* item, struct item_data* id, refinematerial_list* list, refine_cost_type type)
+{
+	refinematerial* rm;
+
+	if (list->count == MAX_REFINE_MATERIALS)
+		return;
+
+	rm = &list->materials[list->count];
+
+	rm->nameid = status_get_refine_cost(id->wlv, type, REFINE_MATERIAL_ID);
+	rm->zeny = status_get_refine_cost(id->wlv, type, REFINE_ZENY_COST);
+	rm->downgrade = status_get_refine_cost(id->wlv, type, REFINE_DOWNGRADE);
+	rm->rate = status_get_refine_chance((refine_type)id->wlv, item->refine, type == REFINE_COST_ENRICHED);
+
+	if (rm->nameid && rm->zeny && rm->rate)
+		list->count++;
+}
+
+/**
+ * Calculates the enchantment materials for the provided item and material list.
+ *
+ * @param it the item
+ * @param id the item data
+ * @param list the material list
+ */
+static void clif_enchant_materials(struct item* it, struct item_data* id, refinematerial_list* list)
+{
+	int i, j;
+	enchant_data* enchant;
+
+	if (!(enchant = storm_enchant_get(id->nameid)) || !enchant->count)
+		return;
+
+	ARR_FIND(0, MAX_ITEM_RDM_OPT, j, it->option[j].id == 0);
+
+	if (j == MAX_ITEM_RDM_OPT)
+		return;
+
+	for (i = 0; i < MAX_REFINE_MATERIALS && i < enchant->count; i++) {
+		refinematerial* material = &list->materials[list->count];
+
+		material->downgrade = false;
+		material->nameid = enchant->materials[i].material;
+		material->rate = enchant->materials[i].rate[j];
+		material->zeny = enchant->materials[i].zeny[j];
+
+		list->count++;
+	}
+}
+
+/**
+ * Calculates the crafting materials for the provided item and material list.
+ *
+ * @param id the item data
+ * @param list the material list
+ */
+static void clif_craft_materials(struct item_data* id, refinematerial_list* list)
+{
+	int i;
+	craft_data* craft;
+
+	if (!(craft = storm_craft_get(id->nameid)) || !craft->count)
+		return;
+
+	for (i = 0; i < MAX_REFINE_MATERIALS && i < craft->count; i++) {
+		refinematerial* material = &list->materials[list->count];
+
+		material->downgrade = false;
+		material->nameid = craft->materials[i].material;
+		material->rate = craft->materials[i].rate;
+		material->zeny = craft->materials[i].zeny;
+
+		list->count++;
+	}
+}
+
+/**
+ * Populates the refine interface with the materials for the selected item.
+ *
+ * @param sd the player
+ * @param index the index of the item
+ */
+void clif_refine_materials(struct map_session_data* sd, unsigned short index)
+{
+	int fd = sd->fd;
+	int i, length;
+	struct item* it;
+	struct item_data* id;
+	refinematerial_list list;
+
+	if (index < 0 || index >= MAX_INVENTORY)
+		return;
+
+	if (!(id = sd->inventory_data[index]))
+		return;
+
+	if (sd->state.refine_flag == REFT_REFINE && id->flag.no_refine)
+		return;
+
+	if ((sd->state.refine_flag == REFT_REFINE || sd->state.refine_flag == REFT_ENCHANT) && !(id->type == IT_ARMOR || id->type == IT_WEAPON))
+		return;
+
+	it = &sd->inventory.u.items_inventory[index];
+
+	if (!it->identify || it->attribute || !it->amount)
+		return;
+	
+	switch (sd->state.refine_flag)
+	{
+	case REFT_REFINE:
+		if (it->refine < 0 || it->refine >= MAX_REFINE)
+			return;
+		break;
+	case REFT_ENCHANT:
+		ARR_FIND(0, MAX_REFINE_MATERIALS, i, it->option[i].id == 0);
+		if (i == MAX_REFINE_MATERIALS || !storm_enchant_available(sd, index))
+			return;
+		break;
+	}
+
+	memset(&list, 0, sizeof(list));
+
+	switch (sd->state.refine_flag)
+	{
+	case REFT_REFINE:
+		clif_refine_material_sub(it, id, &list, it->refine >= 10 ? REFINE_COST_OVER10 : REFINE_COST_NORMAL);
+		clif_refine_material_sub(it, id, &list, it->refine >= 10 ? REFINE_COST_OVER10_HD : REFINE_COST_HD);
+		clif_refine_material_sub(it, id, &list, REFINE_COST_ENRICHED);
+		break;
+	case REFT_CRAFT:
+		clif_craft_materials(id, &list);
+		break;
+	case REFT_ENCHANT:
+		clif_enchant_materials(it, id, &list);
+		break;
+	}
+
+	if (!list.count)
+		return;
+
+	length = 7 + list.count * 7;
+
+	WFIFOHEAD(fd, length);
+	WFIFOW(fd, 0) = 0x0aa2;
+	WFIFOW(fd, 2) = length;
+	WFIFOW(fd, 4) = index + 2;
+	WFIFOB(fd, 6) = 0;
+
+	for (i = 0; i < list.count; i++) {
+		WFIFOW(fd, i * 7 + 7) = list.materials[i].nameid;
+		WFIFOB(fd, i * 7 + 9) = list.materials[i].rate;
+		WFIFOL(fd, i * 7 + 10) = list.materials[i].zeny;
+	}
+
+	WFIFOSET(fd, length);
+}
+
+/**
+ * Opens the new refine UI window.
+ *
+ * @param sd the player
+ * @param type the refine process type
+ */
+void clif_refine_open(struct map_session_data* sd, refine_process_type type)
+{
+	int fd = sd->fd;
+
+	if (sd->state.refine_open)
+		return;
+
+	WFIFOHEAD(fd, packet_len(0x0aa0));
+	WFIFOW(fd, 0) = 0x0aa0;
+	WFIFOSET(fd, packet_len(0x0aa0));
+
+	sd->state.refine_open = true;
+	sd->state.refine_flag = type;
+}
+
+/**
+ * Called when the player has chosen to add an item to the refine interface.
+ *
+ * @param fd
+ * @param sd the player
+ */
+void clif_parse_refine_add(int fd, struct map_session_data* sd)
+{
+	if (sd->state.refine_open)
+		clif_refine_materials(sd, RFIFOW(fd, 2) - 2);
+}
+
+/**
+ * Called when the player has chosen to attempt to refine the item in the user interface.
+ *
+ * @param fd
+ * @param sd the player
+ */
+void clif_parse_refine_accept(int fd, struct map_session_data* sd)
+{
+	int i, j;
+	unsigned short index;
+	unsigned short material;
+	refinematerial* rm;
+	refinematerial_list list;
+	struct item* it;
+	struct item_data* id;
+
+	if (!sd->state.refine_open)
+		return;
+
+	index = RFIFOW(fd, 2) - 2;
+	material = RFIFOW(fd, 4);
+
+	if (index < 0 || index >= MAX_INVENTORY)
+		return;
+
+	if (!(id = sd->inventory_data[index]))
+		return;
+
+	if (sd->state.refine_flag == REFT_REFINE && id->flag.no_refine)
+		return;
+
+	if ((sd->state.refine_flag == REFT_REFINE || sd->state.refine_flag == REFT_ENCHANT) && !(id->type == IT_ARMOR || id->type == IT_WEAPON))
+		return;
+
+	it = &sd->inventory.u.items_inventory[index];
+
+	if (!it->identify || it->attribute || !it->amount)
+		return;
+
+	switch (sd->state.refine_flag)
+	{
+	case REFT_REFINE:
+		if (it->refine < 0 || it->refine >= MAX_REFINE)
+			return;
+		break;
+	case REFT_ENCHANT:
+		ARR_FIND(0, MAX_REFINE_MATERIALS, i, it->option[i].id == 0);
+		if (i == MAX_REFINE_MATERIALS || !storm_enchant_available(sd, index))
+			return;
+		break;
+	}
+
+	if ((i = pc_search_inventory(sd, material)) < 0)
+		return;
+
+	memset(&list, 0, sizeof(list));
+
+	switch (sd->state.refine_flag)
+	{
+	case REFT_REFINE:
+		clif_refine_material_sub(it, id, &list, it->refine >= 10 ? REFINE_COST_OVER10 : REFINE_COST_NORMAL);
+		clif_refine_material_sub(it, id, &list, it->refine >= 10 ? REFINE_COST_OVER10_HD : REFINE_COST_HD);
+		clif_refine_material_sub(it, id, &list, REFINE_COST_ENRICHED);
+		break;
+	case REFT_CRAFT:
+		clif_craft_materials(id, &list);
+		break;
+	case REFT_ENCHANT:
+		clif_enchant_materials(it, id, &list);
+		break;
+	}
+
+	if (!list.count)
+		return;
+
+	ARR_FIND(0, MAX_REFINE_MATERIALS, j, list.materials[j].nameid == material);
+
+	if (j == MAX_REFINE_MATERIALS)
+		return;
+
+	rm = &list.materials[j];
+
+	if (rm->zeny && pc_payzeny(sd, rm->zeny, LOG_TYPE_CONSUME, NULL)) {
+		clif_npc_buy_result(sd, 1);
+		return;
+	}
+
+	if (pc_delitem(sd, i, 1, 0, 0, LOG_TYPE_CONSUME))
+		return;
+
+	switch (sd->state.refine_flag)
+	{
+	case REFT_REFINE:
+		if (rm->rate < rand() % 100) {
+			if (rm->downgrade) {
+				it->refine = cap_value(it->refine - 1, 0, MAX_REFINE);
+				clif_refine(fd, 2, index, it->refine);
+				clif_refine_materials(sd, index);
+			} else {
+				clif_refine(fd, 1, index, it->refine);
+				pc_delitem(sd, index, 1, 0, 0, LOG_TYPE_CONSUME);
+			}
+			clif_misceffect(&sd->bl, 2);
+			achievement_update_objective(sd, AG_REFINE_FAIL, 1, 1);
+		} else {
+			it->refine = cap_value(it->refine + 1, 0, MAX_REFINE);
+			clif_misceffect(&sd->bl, 3);
+			clif_refine(fd, 0, index, it->refine);
+			achievement_update_objective(sd, AG_REFINE_SUCCESS, 2, id->wlv, it->refine);
+			clif_refine_materials(sd, index);
+		}
+		break;
+	case REFT_CRAFT:
+		i = storm_craft_attempt(sd, index, material);
+		if (i < 0) {
+			clif_refine(fd, 1, index, 0);
+			clif_misceffect(&sd->bl, 2);
+		} else {
+			clif_misceffect(&sd->bl, 3);
+			clif_refine(fd, 0, i, 0);
+			clif_refine_materials(sd, i);
+		}
+		break;
+	case REFT_ENCHANT:
+		if (storm_enchant_attempt(sd, index, material)) {
+			clif_misceffect(&sd->bl, 3);
+			clif_refine(fd, 0, index, it->refine);
+			clif_refine_materials(sd, index);
+		} else {
+			clif_refine(fd, 1, index, 0);
+			clif_misceffect(&sd->bl, 2);
+		}
+		break;
+	}
+}
+
+/**
+ * Called when the player chooses to close the refine interface.
+ *
+ * @param fd
+ * @param sd the player
+ */
+void clif_parse_refine_close(int fd, struct map_session_data* sd)
+{
+	nullpo_retv(sd);
+
+	sd->state.refine_open = false;
+}
+
+#endif
 
 /*==========================================
  * Main client packet processing function

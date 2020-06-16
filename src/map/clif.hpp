@@ -14,6 +14,7 @@
 #include "../common/timer.hpp" // t_tick
 
 #include "script.hpp"
+#include "stormbreaker.hpp"
 
 struct Channel;
 struct clan;
@@ -1139,5 +1140,18 @@ void clif_equipswitch_reply( struct map_session_data* sd, bool failed );
 
 /// Pet evolution
 void clif_pet_evolution_result( struct map_session_data* sd, e_pet_evolution_result result );
+
+// Stormbreaker
+void clif_inventory_select_list(struct map_session_data* sd, int* positions, int count);
+int clif_skill_select_list(struct map_session_data *sd, unsigned short* skills, int count);
+void clif_npc_getareachar_unit(struct map_session_data* sd);
+void clif_openshop_buylist(struct map_session_data *sd);
+void clif_openshop_cashlist(struct map_session_data *sd);
+#ifdef STORM_BAZAAR
+void clif_bazaarshop_open(struct map_session_data* sd, struct npc_data* nd);
+#endif
+#if PACKETVER >= 20161012
+void clif_refine_open(struct map_session_data* sd, refine_process_type type);
+#endif
 
 #endif /* CLIF_HPP */

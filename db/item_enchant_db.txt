@@ -1,0 +1,50 @@
+//===================================================================
+// Item Enchanting file
+//-------------------------------------------------------------------
+// ItemID,MaterialID,RandomOptionID,RandomOptionValue,RandomOptionParam,Chance{:Chance{:..}},Cost{:Cost{:..}}{,Flag}
+//-------------------------------------------------------------------
+//
+// This database file can contain the collection of items which can be
+// enchanted with random options. An item supports up to 4 different
+// enchantment options.
+//
+// ItemID				:	The item which can be crafted/upgraded
+// MaterialID			:	The item or material needed to enchant the item
+// RandomOptionID		:	The ID of the random option
+// RandomOptionValue	:	The random option value
+// RandomOptionParam	:	The random option parameter
+// Chance				:	The chance of the enchantment succeeding (%)
+// Cost					:	The cost of the enchantment
+// Flag					:	The optional additional flags
+//
+// Flags:
+//		0x01	The item is destroyed upon failure
+//		0x02	The item is broken upon failure
+//
+// For example:
+//	1201,7091,RDMOPT_VAR_MAXHPAMOUNT,30,0,70,100000
+//
+// Means:
+//	Knife[3] adds HP+30%, 70% chance, 100000z
+//
+// If multiple chances/costs are provided, these will be the values used
+// depending on how many enchantments already exist on the item.
+//
+// For example:
+//	1201,7091,RDMOPT_X,Y,Z,100:80:50,10000:25000:50000:100000
+//
+// Means:
+//	Knife[3] has..
+//		100% chance at 10000z with no existing enchants
+//		80% chance at 25000z with 1 existing enchant
+//		50% chance at 50000z with 2 existing enchants
+//		50% chance at 100000z with 3 existing enchants
+//
+// The maximum number of enchants for different equipment locations can
+// be found in the stormbreaker.conf file
+//
+// Please note that the enchanting system uses the same user interface
+// as the new refine UI, so this system requires a client version of
+// 2016-10-12aRagexeRE or later.
+//
+//-------------------------------------------------------------------

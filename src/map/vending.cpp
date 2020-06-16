@@ -82,6 +82,10 @@ void vending_vendinglistreq(struct map_session_data* sd, int id)
 	struct map_session_data* vsd;
 	nullpo_retv(sd);
 
+#ifdef STORM_BAZAAR
+	sd->bazaar_shop_id = 0;
+#endif
+
 	if( (vsd = map_id2sd(id)) == NULL )
 		return;
 	if( !vsd->state.vending )
@@ -125,10 +129,26 @@ void vending_purchasereq(struct map_session_data* sd, int aid, int uid, const ui
 	int i, j, cursor, w, new_ = 0, blank, vend_list[MAX_VENDING];
 	double z;
 	struct s_vending vending[MAX_VENDING]; // against duplicate packets
-	struct map_session_data* vsd = map_id2sd(aid);
+	struct map_session_data* vsd;
 
 	nullpo_retv(sd);
-	if( vsd == NULL || !vsd->state.vending || vsd->bl.id == sd->bl.id )
+
+#ifdef STORM_BAZAAR
+	if (sd->bazaar_shop_id)
+	{
+		struct npc_data* nd = map_id2nd(sd->bazaar_shop_id);
+
+		if (nd == NULL || nd->subtype != NPCTYPE_BAZAARSHOP)
+			clif_buyvending(sd, 0, 0, 6);
+		else
+			storm_bazaar_purchase(sd, data, (uint16)count);
+
+		sd->bazaar_shop_id = 0;
+		return;
+	}
+#endif
+
+	if( (vsd = map_id2sd(aid)) == NULL || !vsd->state.vending || vsd->bl.id == sd->bl.id )
 		return; // invalid shop
 
 	if( vsd->vender_id != uid ) { // shop has changed

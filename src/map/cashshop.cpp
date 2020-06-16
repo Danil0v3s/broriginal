@@ -590,6 +590,7 @@ bool cashshop_buylist( struct map_session_data* sd, uint32 kafrapoints, int n, u
 
 				item_tmp.nameid = nameid;
 				item_tmp.identify = 1;
+				STORM_DURABILITY(id, item_tmp);
 
 				switch( pc_additem( sd, &item_tmp, get_amt, LOG_TYPE_CASH ) ){
 					case ADDITEM_OVERWEIGHT:

@@ -242,6 +242,7 @@ struct mob_data {
 	 * MvP Tombstone NPC ID
 	 **/
 	int tomb_nid;
+	int party_id;
 };
 
 class MobAvailDatabase : public YamlDatabase {

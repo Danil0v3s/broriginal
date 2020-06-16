@@ -35,6 +35,7 @@
 #include "pc.hpp"
 #include "pet.hpp"
 #include "storage.hpp"
+#include "stormbreaker.hpp"
 #include "trade.hpp"
 
 // Directions values
@@ -81,6 +82,7 @@ int unit_walktoxy_sub(struct block_list *bl)
 	int i;
 	struct walkpath_data wpd;
 	struct unit_data *ud = NULL;
+	struct map_session_data* sd;
 
 	nullpo_retr(1, bl);
 	ud = unit_bl2ud(bl);
@@ -95,6 +97,13 @@ int unit_walktoxy_sub(struct block_list *bl)
 		&& (bl->type != BL_NPC) ) // If type is a NPC, please disregard.
 			return 0;
 #endif
+
+	sd = BL_CAST(BL_PC, bl);
+
+	if (sd && sd->special_state.snap && unit_movepos(bl, ud->to_x, ud->to_y, 1, true)) {
+		clif_snap(bl, bl->x, bl->y);
+		return 1;
+	}
 
 	memcpy(&ud->walkpath,&wpd,sizeof(wpd));
 
@@ -1393,7 +1402,7 @@ int unit_can_move(struct block_list *bl) {
 	if (!ud)
 		return 0;
 
-	if (ud->skilltimer != INVALID_TIMER && ud->skill_id != LG_EXEEDBREAK && (!sd || !pc_checkskill(sd, SA_FREECAST) || skill_get_inf2(ud->skill_id, INF2_ISGUILD)))
+	if (ud->skilltimer != INVALID_TIMER && ud->skill_id != LG_EXEEDBREAK && (!sd || (!pc_checkskill(sd, SA_FREECAST) && !sd->bonus.skillmove) || skill_get_inf2(ud->skill_id, INF2_ISGUILD)))
 		return 0; // Prevent moving while casting
 
 	if (DIFF_TICK(ud->canmove_tick, gettick()) > 0)
@@ -1950,7 +1959,7 @@ int unit_skilluse_id2(struct block_list *src, int target_id, uint16 skill_id, ui
 	if( casttime > 0 ) {
 		ud->skilltimer = add_timer( tick+casttime, skill_castend_id, src->id, 0 );
 
-		if( sd && (pc_checkskill(sd,SA_FREECAST) > 0 || skill_id == LG_EXEEDBREAK) )
+		if( sd && (pc_checkskill(sd,SA_FREECAST) > 0 || sd->bonus.skillmove > 0 || skill_id == LG_EXEEDBREAK) )
 			status_calc_bl(&sd->bl, SCB_SPEED|SCB_ASPD);
 	} else
 		skill_castend_id(ud->skilltimer,tick,src->id,0);
@@ -2137,7 +2146,7 @@ int unit_skilluse_pos2( struct block_list *src, short skill_x, short skill_y, ui
 	if( casttime > 0 ) {
 		ud->skilltimer = add_timer( tick+casttime, skill_castend_pos, src->id, 0 );
 
-		if( (sd && pc_checkskill(sd,SA_FREECAST) > 0) || skill_id == LG_EXEEDBREAK)
+		if( (sd && (pc_checkskill(sd,SA_FREECAST) > 0 || sd->bonus.skillmove > 0)) || skill_id == LG_EXEEDBREAK)
 			status_calc_bl(&sd->bl, SCB_SPEED|SCB_ASPD);
 	} else {
 		ud->skilltimer = INVALID_TIMER;
@@ -2701,6 +2710,21 @@ static int unit_attack_timer_sub(struct block_list* src, int tid, t_tick tick)
 			unit_set_walkdelay(src, tick, sstatus->amotion, 1);
 	}
 
+	// Stormbreaker
+	if (sd && sd->bonus.switchplace > rand()%100 && !status_isdead(src) && !status_isdead(target) && unit_can_move(src) && unit_can_move(target))
+	{
+		int sx = src->x;
+		int sy = src->y;
+		int tx = target->x;
+		int ty = target->y;
+
+		unit_movepos(src, tx, ty, 1, false);
+		unit_movepos(target, sx, sy, 1, false);
+
+		clif_snap(src, tx, ty);
+		clif_snap(target, sx, sy);
+	}
+
 	if(ud->state.attack_continue) {
 		if (src->type == BL_PC && battle_config.idletime_option&IDLE_ATTACK)
 			((TBL_PC*)src)->idletime = last_tick;
@@ -2781,7 +2805,7 @@ int unit_skillcastcancel(struct block_list *bl, char type)
 
 	ud->skilltimer = INVALID_TIMER;
 
-	if( sd && (pc_checkskill(sd,SA_FREECAST) > 0 || skill_id == LG_EXEEDBREAK) )
+	if( sd && (pc_checkskill(sd,SA_FREECAST) > 0 || sd->bonus.skillmove > 0 || skill_id == LG_EXEEDBREAK) )
 		status_calc_bl(&sd->bl, SCB_SPEED|SCB_ASPD);
 
 	if( sd ) {
@@ -3272,6 +3296,9 @@ int unit_free(struct block_list *bl, clr_type clrtype)
 			pc_delautobonus(sd, sd->autobonus2, false);
 			pc_delautobonus(sd, sd->autobonus3, false);
 
+			// Status bonus
+			storm_statusbonus_clear(sd);
+
 			if( sd->followtimer != INVALID_TIMER )
 				pc_stop_following(sd);
 
@@ -3335,6 +3362,16 @@ int unit_free(struct block_list *bl, clr_type clrtype)
 
 			if (sd->achievement_data.achievements)
 				achievement_free(sd);
+
+			// Stormbreaker
+			if (sd->openshop) {
+				if (sd->openshop->shop_item) {
+					aFree(sd->openshop->shop_item);
+					sd->openshop->shop_item = NULL;
+				}
+				aFree(sd->openshop);
+				sd->openshop = NULL;
+			}
 
 			// Clearing...
 			if (sd->bonus_script.head)

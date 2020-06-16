@@ -1288,6 +1288,8 @@ static int mob_ai_sub_hard_activesearch(struct block_list *bl,va_list ap)
 		if (((TBL_PC*)bl)->state.gangsterparadise &&
 			!status_has_mode(&md->status,MD_STATUS_IMMUNE))
 			return 0; //Gangster paradise protection.
+		if (((TBL_PC*)bl)->special_state.undetectable)
+			return 0;
 	default:
 		if (battle_config.hom_setting&HOMSET_FIRST_TARGET &&
 			(*target) && (*target)->type == BL_HOM && bl->type != BL_HOM)
@@ -2112,13 +2114,18 @@ void mob_setdropitem_option(struct item *itm, struct s_mob_drop *mobdrop) {
 /*==========================================
  * Initializes the delay drop structure for mob-dropped items.
  *------------------------------------------*/
+#ifdef STORM_ITEM_DURABILITY
+static struct item_drop* mob_setdropitem(struct s_mob_drop *mobdrop, int qty, unsigned short mob_id, struct item_data* it)
+#else
 static struct item_drop* mob_setdropitem(struct s_mob_drop *mobdrop, int qty, unsigned short mob_id)
+#endif
 {
 	struct item_drop *drop = ers_alloc(item_drop_ers, struct item_drop);
 	memset(&drop->item_data, 0, sizeof(struct item));
 	drop->item_data.nameid = mobdrop->nameid;
 	drop->item_data.amount = qty;
 	drop->item_data.identify = itemdb_isidentified(mobdrop->nameid);
+	STORM_DURABILITY(it, drop->item_data);
 	mob_setdropitem_option(&drop->item_data, mobdrop);
 	drop->mob_id = mob_id;
 	drop->next = NULL;
@@ -2712,6 +2719,7 @@ int mob_dead(struct mob_data *md, struct block_list *src, int type)
 		dlist->item = NULL;
 
 		for (i = 0; i < MAX_MOB_DROP_TOTAL; i++) {
+			int count;
 			if (md->db->dropitem[i].nameid <= 0)
 				continue;
 			if ( !(it = itemdb_exists(md->db->dropitem[i].nameid)) )
@@ -2782,7 +2790,22 @@ int mob_dead(struct mob_data *md, struct block_list *src, int type)
 				continue;
 			}
 
-			ditem = mob_setdropitem(&md->db->dropitem[i], 1, md->mob_id);
+			count = 1;
+
+			if (sd) {
+				for (const auto& it : sd->multidrop) {
+					if (it.value2 > rand() % 10000) {
+						count = it.value1;
+						break;
+					}
+				}
+			}
+
+#ifdef STORM_ITEM_DURABILITY
+			ditem = mob_setdropitem(&md->db->dropitem[i], count, md->mob_id, it);
+#else
+			ditem = mob_setdropitem(&md->db->dropitem[i], count, md->mob_id);
+#endif
 
 			//A Rare Drop Global Announce by Lupus
 			if( mvp_sd && drop_rate <= battle_config.rare_drop_announce ) {
@@ -2801,7 +2824,11 @@ int mob_dead(struct mob_data *md, struct block_list *src, int type)
 			struct s_mob_drop mobdrop;
 			memset(&mobdrop, 0, sizeof(struct s_mob_drop));
 			mobdrop.nameid = itemdb_searchrandomid(IG_FINDINGORE,1);
+#ifdef STORM_ITEM_DURABILITY
+			ditem = mob_setdropitem(&mobdrop, 1, md->mob_id, itemdb_search(mobdrop.nameid));
+#else
 			ditem = mob_setdropitem(&mobdrop, 1, md->mob_id);
+#endif
 			mob_item_drop(md, dlist, ditem, 0, battle_config.finding_ore_rate/10, homkillonly);
 		}
 
@@ -2834,7 +2861,11 @@ int mob_dead(struct mob_data *md, struct block_list *src, int type)
 					memset(&mobdrop, 0, sizeof(struct s_mob_drop));
 					mobdrop.nameid = dropid;
 
-					mob_item_drop(md, dlist, mob_setdropitem(&mobdrop,1,md->mob_id), 0, drop_rate, homkillonly);
+#ifdef STORM_ITEM_DURABILITY
+					mob_item_drop(md, dlist, mob_setdropitem(&mobdrop,1,md->mob_id,itemdb_search(dropid)), 0, drop_rate, homkillonly);
+#else
+					mob_item_drop(md, dlist, mob_setdropitem(&mobdrop, 1, md->mob_id), 0, drop_rate, homkillonly);
+#endif
 				}
 			}
 
@@ -2934,6 +2965,7 @@ int mob_dead(struct mob_data *md, struct block_list *src, int type)
 				memset(&item,0,sizeof(item));
 				item.nameid=mdrop[i].nameid;
 				item.identify= itemdb_isidentified(item.nameid);
+				STORM_DURABILITY(i_data, item);
 				clif_mvp_item(mvp_sd,item.nameid);
 				log_mvp[0] = item.nameid;
 

@@ -312,6 +312,648 @@ void pc_set_reg_load( bool val ){
 	reg_load = val;
 }
 
+/// Show error message
+#define PC_BONUS_SHOW_ERROR(type,value1,val) { ShowError("%s: %s: Invalid %s %d.\n",__FUNCTION__,#type,#value1,(val)); break; }
+/// Check for valid Element, break & show error message if invalid Element
+#define PC_BONUS_CHK_ELEMENT(ele,bonus) { if (!CHK_ELEMENT((ele))) { PC_BONUS_SHOW_ERROR((bonus),Element,(ele)); }}
+/// Check for valid Race, break & show error message if invalid Race
+#define PC_BONUS_CHK_RACE(rc,bonus) { if (!CHK_RACE((rc))) { PC_BONUS_SHOW_ERROR((bonus),Race,(rc)); }}
+/// Check for valid Race2, break & show error message if invalid Race2
+#define PC_BONUS_CHK_RACE2(rc2,bonus) { if (!CHK_RACE2((rc2))) { PC_BONUS_SHOW_ERROR((bonus),Race2,(rc2)); }}
+/// Check for valid Class, break & show error message if invalid Class
+#define PC_BONUS_CHK_CLASS(cl,bonus) { if (!CHK_CLASS((cl))) { PC_BONUS_SHOW_ERROR((bonus),Class,(cl)); }}
+/// Check for valid Size, break & show error message if invalid Size
+#define PC_BONUS_CHK_SIZE(sz,bonus) { if (!CHK_MOBSIZE((sz))) { PC_BONUS_SHOW_ERROR((bonus),Size,(sz)); }}
+/// Check for valid SC, break & show error message if invalid SC
+#define PC_BONUS_CHK_SC(sc,bonus) { if ((sc) <= SC_NONE || (sc) >= SC_MAX) { PC_BONUS_SHOW_ERROR((bonus),Effect,(sc)); }}
+
+/* Bonus expansion pack */
+
+/**
+ * Updates or adds a bonus2 value to the provided vector. The method compares the values of
+ * value1 to indicate whether an existing record should be updated. If the update flag is
+ * false, then no update occurs.
+ *
+ * @param list the bonus vector
+ * @param value1 the first argument of the bonus
+ * @param value2 the second argument of the bonus
+ * @param update whether to update an existing record
+ */
+static void pc_bonus2_value(std::vector<s_bonusvalue2>& list, int value1, int value2, bool update)
+{
+	struct s_bonusvalue2 entry;
+
+	if (update) {
+		for (auto& it : list) {
+			if (it.value1 == value1) {
+				it.value2 += value2;
+				return;
+			}
+		}
+	}
+	
+	entry.value1 = value1;
+	entry.value2 = value2;
+	list.push_back(entry);
+}
+
+/**
+ * Updates or adds a bonus3 value to the provided vector. The method compares the values of
+ * value1 and value2 to indicate whether an existing record should be updated. If the update flag is
+ * false, then no update occurs.
+ *
+ * @param list the bonus vector
+ * @param value1 the first argument of the bonus
+ * @param value2 the second argument of the bonus
+ * @param value3 the third argument of the bonus
+ * @param update whether to update an existing record
+ */
+static void pc_bonus3_value(std::vector<s_bonusvalue3>& list, int value1, int value2, int value3, bool update)
+{
+	struct s_bonusvalue3 entry;
+
+	if (update) {
+		for (auto& it : list) {
+			if (it.value1 == value1 && it.value2 == value2) {
+				it.value3 += value3;
+				return;
+			}
+		}
+	}
+
+	entry.value1 = value1;
+	entry.value2 = value2;
+	entry.value3 = value3;
+	list.push_back(entry);
+}
+
+/**
+ * Processes extra bonuses from the bonus <type>,<val>; script command.
+ */
+static void pc_bonus_expansion(struct map_session_data* sd, int type, int val)
+{
+	switch (type) {
+	case SP_CHANGERACE:
+		PC_BONUS_CHK_RACE(val, SP_CHANGERACE);
+		if (sd->state.lr_flag != 2)
+			sd->base_status.race = (enum e_race)val;
+		break;
+	case SP_ADD_HOMINTIMACY:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.homintimacy += val;
+		break;
+	case SP_ADD_SKILLMOVE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.skillmove += val;
+		break;
+	case SP_ADD_TRAPEVADE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.evadetrap += val;
+		break;
+	case SP_MAGICAREA_DEF_RATE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.magicareadefrate += val;
+		break;
+	case SP_MAGICSINGLE_DEF_RATE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.magicsingledefrate += val;
+		break;
+	case SP_ADD_CRITICALEVADE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.evadecritical += val;
+		break;
+	case SP_KEEPBUFFS:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.keep_buffs = 1;
+		break;
+	case SP_HEALATTACK:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.healattack |= cap_value(val, 0, SHRT_MAX);
+		break;
+	case SP_MDEF_RATIO_ATK_ELE:
+		PC_BONUS_CHK_ELEMENT(val, SP_MDEF_RATIO_ATK_ELE);
+		if (!sd->state.lr_flag)
+			sd->right_weapon.mdef_ratio_atk_ele |= 1 << val;
+		else if (sd->state.lr_flag == 1)
+			sd->left_weapon.mdef_ratio_atk_ele |= 1 << val;
+		break;
+	case SP_MDEF_RATIO_ATK_RACE:
+		PC_BONUS_CHK_RACE(val, SP_MDEF_RATIO_ATK_RACE);
+		if (!sd->state.lr_flag)
+			sd->right_weapon.mdef_ratio_atk_race |= 1 << val;
+		else if (sd->state.lr_flag == 1)
+			sd->left_weapon.mdef_ratio_atk_race |= 1 << val;
+		break;
+	case SP_ADD_STATUSRATE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.statusrate += val;
+		break;
+	case SP_SWITCHPLACE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.switchplace += val;
+		break;
+	case SP_SKILLCHAIN:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.skillchain += val;
+		break;
+	case SP_SKILLBOUNCE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.skillbounce += val;
+		break;
+	case SP_ADD_PETINTIMACY:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.petintimacy += val;
+		break;
+	case SP_INTERRUPT:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.interrupt += val;
+		break;
+	case SP_INVERT:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.invert += val;
+		break;
+	case SP_CHANGESIZE:
+		if (sd->state.lr_flag != 2)
+			sd->base_status.size = (unsigned char)cap_value(val, SZ_SMALL, SZ_BIG);
+		break;
+	case SP_DOUBLECAST:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.doublecast += val;
+		break;
+	case SP_IGNOREFLEE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.ignoreflee += val;
+		break;
+	case SP_DEATH:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.death += val;
+		break;
+	case SP_WATERATKRATE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.wateratkrate += val;
+		break;
+	case SP_WATERMATKRATE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.watermatkrate += val;
+		break;
+	case SP_NOCHAT:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.no_chat = 1;
+		break;
+	case SP_NOCONSUME:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.noconsume += val;
+		break;
+	case SP_NOAMMO:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.noammo += val;
+		break;
+	case SP_SNAPMOVE:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.snap = 1;
+		break;
+	case SP_ZENYATTACK:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.zeny_attack += val;
+		break;
+	case SP_ITEMATTACK:
+		if (sd->state.lr_flag != 2) {
+			struct s_bonusvalue entry = { val };
+			sd->itemattack.push_back(entry);
+		}
+		break;
+	case SP_AUTOLIFE:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.autolife += val;
+		break;
+	case SP_DAMAGELIMIT:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.damagelimit = sd->bonus.damagelimit ? min(sd->bonus.damagelimit, val) : val;
+		break;
+	case SP_HPLIMIT:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.hplimit = sd->bonus.hplimit ? min(sd->bonus.hplimit, val) : val;
+		break;
+	case SP_SPLIMIT:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.splimit = sd->bonus.splimit ? min(sd->bonus.splimit, val) : val;
+		break;
+	case SP_NOEQUIP:
+		if (sd->state.lr_flag != 2) {
+			short index;
+			if (val < 0 || EQI_MAX <= val) {
+				ShowWarning("pc_bonus: invalid equipment position %d\n", val);
+				return;
+			}
+			index = sd->equip_index[val];
+			sd->noequip[val] = 1;
+			if (index > -1)
+				pc_unequipitem(sd, index, 3);
+		}
+		break;
+	case SP_ELEMENTLV:
+		if (sd->state.lr_flag != 2)
+			sd->base_status.ele_lv = cap_value(val, 1, 4);
+		break;
+	case SP_SKILLHPCOST:
+		if (sd->state.lr_flag != 2) {
+			if (val == 0)
+				sd->special_state.skill_hp = 1;
+			else {
+				struct s_bonusvalue entry = { val };
+				sd->skillhpcost.push_back(entry);
+			}
+		}
+		break;
+	case SP_SKILLITEMCOST:
+		if (sd->state.lr_flag != 2) {
+			struct s_bonusvalue2 entry = { -1, val };
+			sd->skillitemcost.push_back(entry);
+		}
+		break;
+	case SP_DURABILITYDEF:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.durabilitydef += val;
+		break;
+	case SP_NOITEMUSE:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.no_item = 1;
+		break;
+	case SP_NOSKILLUSE:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.no_skill = 1;
+		break;
+	case SP_NOWALK:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.no_walk = 1;
+		break;
+	case SP_UNDETECTABLE:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.undetectable = 1;
+		break;
+	case SP_SKILLREQUIRECOST:
+		if (sd->state.lr_flag != 2)
+			sd->bonus.skillrequirementcost += val;
+		break;
+	case SP_ITEMHPTOSP:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.item_hptosp = 1;
+		break;
+	case SP_ITEMSPTOHP:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.item_sptohp = 1;
+		break;
+	case SP_ZENYCOST:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.zeny_cost = 1;
+		break;
+	case SP_HPCOST:
+		if (sd->state.lr_flag != 2)
+			sd->special_state.hp_cost = 1;
+		break;
+	default:
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus: unknown bonus type %d %d in OnPCStatCalcEvent!\n", type, val);
+		} else if (current_equip_combo_pos > 0) {
+			ShowWarning("pc_bonus: unknown bonus type %d %d in a combo with item #%d\n", type, val, sd->inventory_data[pc_checkequip(sd, current_equip_combo_pos)]->nameid);
+		} else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
+			ShowWarning("pc_bonus: unknown bonus type %d %d in item #%d\n", type, val, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
+		} else {
+			ShowWarning("pc_bonus: unknown bonus type %d %d in unknown usage. Report this!\n", type, val);
+		}
+		break;
+	}
+}
+
+/**
+ * Processes extra bonuses from the bonus2 <type>,<val>,<val2>; script command.
+ */
+static void pc_bonus2_expansion(struct map_session_data* sd, int type, int value1, int value2)
+{
+	switch (type) {
+	case SP_ADD_IGNOREGTB:
+		if (sd->state.lr_flag != 2) {
+			sd->bonus.ignoregtb.value1 += value1; // ignore
+			sd->bonus.ignoregtb.value2 += value2; // rate
+		}
+		break;
+	case SP_ADD_CRITICALDODGE:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->criticaldodge, value1, value2, true);
+		break;
+	case SP_ADD_STATUSDAMAGE:
+		PC_BONUS_CHK_SC(value1, SP_ADD_STATUSDAMAGE);
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->statusdamage, value1, value2, true);
+		break;
+	case SP_ADD_STATUSRESIST:
+		PC_BONUS_CHK_SC(value1, SP_ADD_STATUSRESIST);
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->statusresist, value1, value2, true);
+		break;
+	case SP_HP_ATK_RATIO:
+		PC_BONUS_CHK_RACE(value1, SP_HP_ATK_RATIO);
+		if (!sd->state.lr_flag)
+			sd->right_weapon.hp_attack_ratio[value1] += value2;
+		else if (sd->state.lr_flag == 1)
+			sd->left_weapon.hp_attack_ratio[value1] += value2;
+		break;
+	case SP_SP_ATK_RATIO:
+		PC_BONUS_CHK_RACE(value1, SP_SP_ATK_RATIO);
+		if (!sd->state.lr_flag)
+			sd->right_weapon.sp_attack_ratio[value1] += value2;
+		else if (sd->state.lr_flag == 1)
+			sd->left_weapon.sp_attack_ratio[value1] += value2;
+		break;
+	case SP_ADD_STATUSRATE:
+		PC_BONUS_CHK_SC(value1, SP_ADD_STATUSRATE);
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->statusrate, value1, value2, true);
+		break;
+	case SP_SKILLCHAIN:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->skillchain, value1, value2, true);
+		break;
+	case SP_SKILLBOUNCE:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->skillbounce, value1, value2, true);
+		break;
+	case SP_SUBJOB:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->subjob, value1, value2, true);
+		break;
+	case SP_ADDJOB:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->addjob, value1, value2, true);
+		break;
+	case SP_ADD_MONSTERDROPITEMATK:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->mobdropitem, value1, value2, true);
+		break;
+	case SP_ADD_MONSTERDROPITEMGROUPATK:
+		if (sd->state.lr_flag != 2) {
+			if (!itemdb_group_exists(value1)) {
+				ShowWarning("pc_bonus2: Invalid item group %d\n", value1);
+				return;
+			}
+			pc_bonus2_value(sd->mobdropitemgroup, value1, value2, true);
+		}
+		break;
+	case SP_ADD_SELFDROPITEMATK:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->selfdropitem, value1, value2,  true);
+		break;
+	case SP_ADD_SELFDROPITEMGROUPATK:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->selfdropitemgroup, value1, value2, true);
+		break;
+	case SP_BREAK_EQUIP:
+		if (value1 < 0 || value1 >= EQI_MAX) {
+			ShowWarning("pc_bonus2: invalid equipment position %d\n", value1);
+			return;
+		}
+		if (sd->state.lr_flag != 2)
+			sd->breakequip[value1] += value2;
+		break;
+	case SP_MULTIDROP:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->multidrop, value1, value2, true);
+		break;
+	case SP_DOUBLECAST:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->doublecast, value1, value2, true);
+		break;
+	case SP_GRAVITY:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->gravity, value1, value2, true);
+		break;
+	case SP_ATKRATECHANCE:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->atkratechance, value1, value2, true);
+		break;
+	case SP_MATKRATECHANCE:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->matkratechance, value1, value2, true);
+		break;
+	case SP_WEAPONDEF:
+		if (sd->state.lr_flag != 2) {
+			if (value1 < 0 || value1 >= MAX_WEAPON_TYPE) {
+				ShowWarning("pc_bonus2: invalid weapon type %d\n", value1);
+				return;
+			}
+			sd->weapondef[value1] += value2;
+		}
+		break;
+	case SP_SKILLITEMCOST:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->skillitemcost, value1, value2, false);
+		break;
+	case SP_DURABILITYDEF:
+		if (sd->state.lr_flag != 2) {
+			if (value1 < 0 || value1 >= EQI_MAX) {
+				ShowWarning("pc_bonus2: invalid equipment position %d\n", value1);
+				return;
+			}
+			sd->durabilitydef[value1] += value2;
+		}
+		break;
+	case SP_SKILLREQUIRECOST:
+		if (sd->state.lr_flag != 2)
+			pc_bonus2_value(sd->skillrequirementcost, value1, value2, true);
+		break;
+	default:
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in OnPCStatCalcEvent!\n", type, value1, value2);
+		} else if (current_equip_combo_pos > 0) {
+			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in a combo with item #%d\n", type, value1, value2, sd->inventory_data[pc_checkequip(sd, current_equip_combo_pos)]->nameid);
+		} else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
+			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in item #%d\n", type, value1, value2, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
+		} else {
+			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in unknown usage. Report this!\n", type, value1, value2);
+		}
+		break;
+	}
+}
+
+/**
+ * Processes extra bonuses from the bonus3 <type>,<val>,<val2>,<val3>; script command.
+ */
+static void pc_bonus3_expansion(struct map_session_data* sd, int type, int value1, int value2, int value3)
+{
+	switch (type) {
+	case SP_ADD_AREASKILL:
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->areaskill, value1, value2, value3, true);
+		break;
+	case SP_SKILL_GAINSP:
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->skillgainsp, value1, value2, value3, true);
+		break;
+	case SP_ADD_STATUSSWITCH:
+		PC_BONUS_CHK_SC(value1, SP_ADD_STATUSSWITCH);
+		PC_BONUS_CHK_SC(value2, SP_ADD_STATUSSWITCH);
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->statusswitch, value1, value2, value3, true);
+		break;
+	case SP_HP_DRAIN_RATE:
+		PC_BONUS_CHK_RACE(value1, SP_HP_DRAIN_RATE);
+		if (!sd->state.lr_flag) {
+			sd->right_weapon.hp_drain_rate_race[value1].rate += value3;
+			sd->right_weapon.hp_drain_rate_race[value1].per += value2;
+		}
+		else if (sd->state.lr_flag == 1) {
+			sd->left_weapon.hp_drain_rate_race[value1].rate += value3;
+			sd->left_weapon.hp_drain_rate_race[value1].per += value2;
+		}
+		break;
+	case SP_SP_DRAIN_RATE:
+		PC_BONUS_CHK_RACE(value1, SP_SP_DRAIN_RATE);
+		if (!sd->state.lr_flag) {
+			sd->right_weapon.sp_drain_rate_race[value1].rate += value3;
+			sd->right_weapon.sp_drain_rate_race[value1].per += value2;
+		}
+		else if (sd->state.lr_flag == 1) {
+			sd->left_weapon.sp_drain_rate_race[value1].rate += value3;
+			sd->left_weapon.sp_drain_rate_race[value1].per += value2;
+		}
+		break;
+	case SP_ATK_EMOTION:
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->attackemotion, value1, value2, value3, true);
+		break;
+	case SP_IGNORE_SKILL_DEF_ELE:
+		PC_BONUS_CHK_ELEMENT(value2, SP_IGNORE_SKILL_DEF_ELE);
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->ignoredefele, value1, value2, value3, true);
+		break;
+	case SP_IGNORE_SKILL_DEF_RACE:
+		PC_BONUS_CHK_RACE(value2, SP_IGNORE_SKILL_DEF_RACE);
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->ignoredefrace, value1, value2, value3, true);
+		break;
+	case SP_ADD_RACEDROPITEMATK:
+		PC_BONUS_CHK_RACE(value2, SP_ADD_RACEDROPITEMATK);
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->mobracedropitem, value1, value2, value3, true);
+		break;
+	case SP_ADD_CLASSDROPITEMATK:
+		PC_BONUS_CHK_CLASS(value2, SP_ADD_CLASSDROPITEMATK);
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->mobclassdropitem, value1, value2, value3, true);
+		break;
+	case SP_ADD_STATUS:
+		PC_BONUS_CHK_SC(value1, SP_ADD_STATUS);
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->statusinflict, value1, value2, value3, true);
+		break;
+	case SP_AUTOHPUSE:
+		if (!itemdb_exists(value1)) {
+			ShowWarning("pc_bonus3: invalid item %d\n", value1);
+			return;
+		}
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->autohpuse, value1, cap_value(value2, 1, 100), value3, false);
+		break;
+	case SP_AUTOSPUSE:
+		if (!itemdb_exists(value1)) {
+			ShowWarning("pc_bonus3: invalid item %d\n", value1);
+			return;
+		}
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->autospuse, value1, cap_value(value2, 1, 100), value3, false);
+		break;
+	case SP_AUTOSTATUSUSE:
+		PC_BONUS_CHK_SC(value2, SP_AUTOSTATUSUSE);
+		if (!itemdb_exists(value1)) {
+			ShowWarning("pc_bonus3: invalid item %d\n", value1);
+			return;
+		}
+		if (sd->state.lr_flag != 2)
+			pc_bonus3_value(sd->autostatususe, value1, value2, value3, false);
+		break;
+	default:
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in OnPCStatCalcEvent!\n", type, value1, value2, value3);
+		} else if (current_equip_combo_pos > 0) {
+			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in a combo with item #%d\n", type, value1, value2, value3, sd->inventory_data[pc_checkequip(sd, current_equip_combo_pos)]->nameid);
+		} else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
+			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in item #%d\n", type, value1, value2, value3, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
+		} else {
+			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in unknown usage. Report this!\n", type, value1, value2, value3);
+		}
+		break;
+	}
+}
+
+/**
+ * Processes extra bonuses from the bonus4 <type>,<val>,<val2>,<val3>,<val4>; script command.
+ */
+static void pc_bonus4_expansion(struct map_session_data* sd, int type, int value1, int value2, int value3, int value4)
+{
+	switch (type) {
+	case SP_WIDESTATUS:
+		PC_BONUS_CHK_SC(value1, SP_WIDESTATUS);
+		if (sd->state.lr_flag != 2) {
+			struct s_bonusvalue4 entry;
+			for (auto& it : sd->areastatus) {
+				if (it.value1 == value1 && it.value2 == value3) {
+					it.value4 += value4;
+					return;
+				}
+			}
+			entry.value1 = value1; // status
+			entry.value2 = value3; // area
+			entry.value3 = value2; // duration
+			entry.value4 = value4;
+			sd->areastatus.push_back(entry);
+		}
+		break;
+	case SP_WIDESTATUS_ONHIT:
+		PC_BONUS_CHK_SC(value1, SP_WIDESTATUS);
+		if (sd->state.lr_flag != 2) {
+			struct s_bonusvalue4 entry;
+			for (auto& it : sd->areastatusonhit) {
+				if (it.value1 == value1 && it.value2 == value3) {
+					it.value4 += value4;
+					return;
+				}
+			}
+			entry.value1 = value1; // status
+			entry.value2 = value3; // area
+			entry.value3 = value2; // duration
+			entry.value4 = value4;
+			sd->areastatusonhit.push_back(entry);
+		}
+		break;
+	default:
+		if (running_npc_stat_calc_event) {
+			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in OnPCStatCalcEvent!\n", type, value1, value2, value3, value4);
+		} else if (current_equip_combo_pos > 0) {
+			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in a combo with item #%d\n", type, value1, value2, value3, value4, sd->inventory_data[pc_checkequip(sd, current_equip_combo_pos)]->nameid);
+		} else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
+			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in item #%d\n", type, value1, value2, value3, value4, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
+		} else {
+			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in unknown usage. Report this!\n", type, value1, value2, value3, value4);
+		}
+		break;
+	}
+}
+
+/// Show error message
+#define PC_BONUS_SHOW_ERROR(type,value1,val) { ShowError("%s: %s: Invalid %s %d.\n",__FUNCTION__,#type,#value1,(val)); break; }
+/// Check for valid Element, break & show error message if invalid Element
+#define PC_BONUS_CHK_ELEMENT(ele,bonus) { if (!CHK_ELEMENT((ele))) { PC_BONUS_SHOW_ERROR((bonus),Element,(ele)); }}
+/// Check for valid Race, break & show error message if invalid Race
+#define PC_BONUS_CHK_RACE(rc,bonus) { if (!CHK_RACE((rc))) { PC_BONUS_SHOW_ERROR((bonus),Race,(rc)); }}
+/// Check for valid Race2, break & show error message if invalid Race2
+#define PC_BONUS_CHK_RACE2(rc2,bonus) { if (!CHK_RACE2((rc2))) { PC_BONUS_SHOW_ERROR((bonus),Race2,(rc2)); }}
+/// Check for valid Class, break & show error message if invalid Class
+#define PC_BONUS_CHK_CLASS(cl,bonus) { if (!CHK_CLASS((cl))) { PC_BONUS_SHOW_ERROR((bonus),Class,(cl)); }}
+/// Check for valid Size, break & show error message if invalid Size
+#define PC_BONUS_CHK_SIZE(sz,bonus) { if (!CHK_MOBSIZE((sz))) { PC_BONUS_SHOW_ERROR((bonus),Size,(sz)); }}
+/// Check for valid SC, break & show error message if invalid SC
+#define PC_BONUS_CHK_SC(sc,bonus) { if ((sc) <= SC_NONE || (sc) >= SC_MAX) { PC_BONUS_SHOW_ERROR((bonus),Effect,(sc)); }}
+
 /**
  * Item Cool Down Delay Saving
  * Struct item_cd is not a member of struct map_session_data
@@ -1310,6 +1952,7 @@ static bool pc_isItemClass (struct map_session_data *sd, struct item_data* item)
  *------------------------------------------------*/
 uint8 pc_isequip(struct map_session_data *sd,int n)
 {
+	int i;
 	struct item_data *item;
 
 	nullpo_retr(ITEM_EQUIP_ACK_FAIL, sd);
@@ -1375,6 +2018,13 @@ uint8 pc_isequip(struct map_session_data *sd,int n)
 				}
 				break;
 		}
+	}
+
+	// <Epoque>
+	for (i = 0; i < EQI_MAX; i++) {
+		unsigned int mask = equip_bitmask[i];
+		if (item->equip & mask && sd->noequip[i])
+			return ITEM_EQUIP_ACK_FAIL;
 	}
 
 	if (sd->sc.count) {
@@ -1471,6 +2121,10 @@ bool pc_authok(struct map_session_data *sd, uint32 login_id2, time_t expiration_
 	sd->expiration_tid = INVALID_TIMER;
 	sd->autotrade_tid = INVALID_TIMER;
 	sd->respawn_tid = INVALID_TIMER;
+
+#ifdef STORM_BAZAAR
+	sd->bazaar_timer_id = INVALID_TIMER;
+#endif
 
 #ifdef SECURE_NPCTIMEOUT
 	// Initialize to defaults/expected
@@ -2362,21 +3016,6 @@ int pc_disguise(struct map_session_data *sd, int class_)
 	}
 	return 1;
 }
-
-/// Show error message
-#define PC_BONUS_SHOW_ERROR(type,type2,val) { ShowError("%s: %s: Invalid %s %d.\n",__FUNCTION__,#type,#type2,(val)); break; }
-/// Check for valid Element, break & show error message if invalid Element
-#define PC_BONUS_CHK_ELEMENT(ele,bonus) { if (!CHK_ELEMENT((ele))) { PC_BONUS_SHOW_ERROR((bonus),Element,(ele)); }}
-/// Check for valid Race, break & show error message if invalid Race
-#define PC_BONUS_CHK_RACE(rc,bonus) { if (!CHK_RACE((rc))) { PC_BONUS_SHOW_ERROR((bonus),Race,(rc)); }}
-/// Check for valid Race2, break & show error message if invalid Race2
-#define PC_BONUS_CHK_RACE2(rc2,bonus) { if (!CHK_RACE2((rc2))) { PC_BONUS_SHOW_ERROR((bonus),Race2,(rc2)); }}
-/// Check for valid Class, break & show error message if invalid Class
-#define PC_BONUS_CHK_CLASS(cl,bonus) { if (!CHK_CLASS((cl))) { PC_BONUS_SHOW_ERROR((bonus),Class,(cl)); }}
-/// Check for valid Size, break & show error message if invalid Size
-#define PC_BONUS_CHK_SIZE(sz,bonus) { if (!CHK_MOBSIZE((sz))) { PC_BONUS_SHOW_ERROR((bonus),Size,(sz)); }}
-/// Check for valid SC, break & show error message if invalid SC
-#define PC_BONUS_CHK_SC(sc,bonus) { if ((sc) <= SC_NONE || (sc) >= SC_MAX) { PC_BONUS_SHOW_ERROR((bonus),Effect,(sc)); }}
 
 /**
  * Add auto spell bonus for player while attacking/attacked
@@ -3572,23 +4211,8 @@ void pc_bonus(struct map_session_data *sd,int type,int val)
 			if (sd->state.lr_flag != 2)
 				sd->special_state.no_mado_fuel = 1;
 			break;
-		case SP_NO_WALK_DELAY:
-			if (sd->state.lr_flag != 2)
-				sd->special_state.no_walk_delay = 1;
-			break;
 		default:
-			if (running_npc_stat_calc_event) {
-				ShowWarning("pc_bonus: unknown bonus type %d %d in OnPCStatCalcEvent!\n", type, val);
-			}
-			else if (current_equip_combo_pos > 0) {
-				ShowWarning("pc_bonus: unknown bonus type %d %d in a combo with item #%d\n", type, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
-			}
-			else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
-				ShowWarning("pc_bonus: unknown bonus type %d %d in item #%d\n", type, val, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
-			}
-			else {
-				ShowWarning("pc_bonus: unknown bonus type %d %d in unknown usage. Report this!\n", type, val);
-			}
+			pc_bonus_expansion(sd, type, val);
 			break;
 	}
 }
@@ -4164,18 +4788,7 @@ void pc_bonus2(struct map_session_data *sd,int type,int type2,int val)
 			sd->dropaddclass[type2] += val;
 		break;
 	default:
-		if (running_npc_stat_calc_event) {
-			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in OnPCStatCalcEvent!\n", type, type2, val);
-		}
-		else if (current_equip_combo_pos > 0) {
-			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in a combo with item #%d\n", type, type2, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
-		} 
-		else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
-			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in item #%d\n", type, type2, val, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
-		}
-		else {
-			ShowWarning("pc_bonus2: unknown bonus type %d %d %d in unknown usage. Report this!\n", type, type2, val);
-		}
+		pc_bonus2_expansion(sd, type, type2, val);
 		break;
 	}
 }
@@ -4301,18 +4914,7 @@ void pc_bonus3(struct map_session_data *sd,int type,int type2,int type3,int val)
 		sd->norecover_state_race[type2].tick = val;
 		break;
 	default:
-		if (running_npc_stat_calc_event) {
-			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in OnPCStatCalcEvent!\n", type, type2, type3, val);
-		}
-		else if (current_equip_combo_pos > 0) {
-			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in a combo with item #%d\n", type, type2, type3, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
-		}
-		else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
-			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in item #%d\n", type, type2, type3, val, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
-		}
-		else {
-			ShowWarning("pc_bonus3: unknown bonus type %d %d %d %d in unknown usage. Report this!\n", type, type2, type3, val);
-		}
+		pc_bonus3_expansion(sd, type, type2, type3, val);
 		break;
 	}
 }
@@ -4385,20 +4987,8 @@ void pc_bonus4(struct map_session_data *sd,int type,int type2,int type3,int type
 		sd->mdef_set_race[type2].tick = type4;
 		sd->mdef_set_race[type2].value = val;
 		break;
-
 	default:
-		if (running_npc_stat_calc_event) {
-			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in OnPCStatCalcEvent!\n", type, type2, type3, type4, val);
-		}
-		else if (current_equip_combo_pos > 0) {
-			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in a combo with item #%d\n", type, type2, type3, type4, val, sd->inventory_data[pc_checkequip( sd, current_equip_combo_pos )]->nameid);
-		}
-		else if (current_equip_card_id > 0 || current_equip_item_index > 0) {
-			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in item #%d\n", type, type2, type3, type4, val, current_equip_card_id ? current_equip_card_id : sd->inventory_data[current_equip_item_index]->nameid);
-		}
-		else {
-			ShowWarning("pc_bonus4: unknown bonus type %d %d %d %d %d in unknown usage. Report this!\n", type, type2, type3, type4, val);
-		}
+		pc_bonus4_expansion(sd, type, type2, type3, type4, val);
 		break;
 	}
 }
@@ -4997,6 +5587,10 @@ enum e_additem_result pc_additem(struct map_session_data *sd,struct item *item,i
 	if(id->flag.autoequip)
 		pc_equipitem(sd, i, id->equip);
 
+#ifdef STORM_ITEM_STATUS
+	storm_itempassive(sd, item->nameid, ICF_ITEM_ADD);
+#endif
+
 	/* rental item check */
 	if( item->expire_time ) {
 		if( time(NULL) > item->expire_time ) {
@@ -5027,12 +5621,16 @@ enum e_additem_result pc_additem(struct map_session_data *sd,struct item *item,i
  *------------------------------------------*/
 char pc_delitem(struct map_session_data *sd,int n,int amount,int type, short reason, e_log_pick_type log_type)
 {
+	int nameid;
+
 	nullpo_retr(1, sd);
 
 	if(n < 0 || sd->inventory.u.items_inventory[n].nameid == 0 || amount <= 0 || sd->inventory.u.items_inventory[n].amount<amount || sd->inventory_data[n] == NULL)
 		return 1;
 
 	log_pick_pc(sd, log_type, -amount, &sd->inventory.u.items_inventory[n]);
+
+	nameid = sd->inventory.u.items_inventory[n].nameid;
 
 	sd->inventory.u.items_inventory[n].amount -= amount;
 	sd->weight -= sd->inventory_data[n]->weight*amount ;
@@ -5048,6 +5646,10 @@ char pc_delitem(struct map_session_data *sd,int n,int amount,int type, short rea
 		clif_updatestatus(sd,SP_WEIGHT);
 
 	pc_show_questinfo(sd);
+
+#ifdef STORM_ITEM_STATUS
+	storm_itempassive(sd, nameid, ICF_ITEM_REMOVE);
+#endif
 
 	return 0;
 }
@@ -5195,6 +5797,8 @@ bool pc_isUseitem(struct map_session_data *sd,int n)
 		return false;
 	//Not consumable item
 	if( item->type != IT_HEALING && item->type != IT_USABLE && item->type != IT_CASH )
+		return false;
+	if (sd->special_state.no_item)
 		return false;
 	if (pc_has_permission(sd,PC_PERM_ITEM_UNCONDITIONAL))
 		return true;
@@ -5695,6 +6299,9 @@ bool pc_steal_item(struct map_session_data *sd,struct block_list *bl, uint16 ski
 	struct status_data *sd_status, *md_status;
 	struct mob_data *md;
 	struct item tmp_item;
+#ifdef STORM_ITEM_DURABILITY
+	struct item_data* it;
+#endif
 
 	if(!sd || !bl || bl->type!=BL_MOB)
 		return false;
@@ -5744,6 +6351,12 @@ bool pc_steal_item(struct map_session_data *sd,struct block_list *bl, uint16 ski
 	tmp_item.nameid = itemid;
 	tmp_item.amount = 1;
 	tmp_item.identify = itemdb_isidentified(itemid);
+
+#ifdef STORM_ITEM_DURABILITY
+	it = itemdb_search(itemid);
+	STORM_DURABILITY(it, tmp_item);
+#endif
+
 	mob_setdropitem_option(&tmp_item, &md->db->dropitem[i]);
 	flag = pc_additem(sd,&tmp_item,1,LOG_TYPE_PICKDROP_PLAYER);
 
@@ -8018,6 +8631,11 @@ void pc_respawn(struct map_session_data* sd, clr_type clrtype)
 
 	pc_setstand(sd, true);
 	pc_setrestartvalue(sd,3);
+
+#ifdef STORM_ITEM_STATUS
+	storm_itempassive_renew(sd);
+#endif
+
 	if( pc_setpos(sd, sd->status.save_point.map, sd->status.save_point.x, sd->status.save_point.y, clrtype) != SETPOS_OK )
 		clif_resurrection(&sd->bl, 1); //If warping fails, send a normal stand up packet.
 }
@@ -8141,6 +8759,18 @@ int pc_dead(struct map_session_data *sd,struct block_list *src)
 				pc_respawn_timer(INVALID_TIMER, gettick(), sd->bl.id, 0);
 			return 0;
 		}
+	}
+
+	// <Epoque>
+	if (sd->bonus.autolife > rand() % 10000) {
+		pc_setrestartvalue(sd, 1);
+		status_percent_heal(&sd->bl, 100, 0);
+		clif_resurrection(&sd->bl, 1);
+		if (battle_config.pc_invincible_time)
+			pc_setinvincibletimer(sd, battle_config.pc_invincible_time);
+		if (mapdata_flag_gvg2(mapdata))
+			pc_respawn_timer(INVALID_TIMER, gettick(), sd->bl.id, 0);
+		return 0;
 	}
 
 	for(k = 0; k < MAX_DEVOTION; k++) {
@@ -8469,6 +9099,10 @@ void pc_revive(struct map_session_data *sd,unsigned int hp, unsigned int sp) {
 	pc_setstand(sd, true);
 	if(battle_config.pc_invincible_time > 0)
 		pc_setinvincibletimer(sd, battle_config.pc_invincible_time);
+
+#ifdef STORM_ITEM_STATUS
+	storm_itempassive_renew(sd);
+#endif
 
 	if( sd->state.gmaster_flag ) {
 		guild_guildaura_refresh(sd,GD_LEADERSHIP,guild_checkskill(sd->guild,GD_LEADERSHIP));
@@ -9022,6 +9656,15 @@ int pc_itemheal(struct map_session_data *sd, int itemid, int hp, int sp)
 			hp = 0;
 	}
 
+	// Stormbreaker
+	if (sd->special_state.item_hptosp && !sd->special_state.item_sptohp) {
+		sp += hp;
+		hp = 0;
+	} else if (sd->special_state.item_sptohp && !sd->special_state.item_hptosp) {
+		hp += sp;
+		sp = 0;
+	}
+
 	return status_heal(&sd->bl, hp, sp, 1);
 }
 
@@ -9032,6 +9675,18 @@ int pc_itemheal(struct map_session_data *sd, int itemid, int hp, int sp)
 int pc_percentheal(struct map_session_data *sd,int hp,int sp)
 {
 	nullpo_ret(sd);
+
+	// Stormbreaker
+	if (potion_flag)
+	{
+		if (sd->special_state.item_hptosp && !sd->special_state.item_sptohp) {
+			sp += hp;
+			hp = 0;
+		} else if (sd->special_state.item_sptohp && !sd->special_state.item_hptosp) {
+			hp += sp;
+			sp = 0;
+		}
+	}
 
 	if (hp > 100) hp = 100;
 	else if (hp <-100) hp = -100;
@@ -9780,19 +10435,25 @@ bool pc_setregistry(struct map_session_data *sd, int64 reg, int64 val)
 				script_array_update(&sd->regs, reg, false);
 			p->value = val;
 		} else {
+			int compare = p->value;
 			p->value = 0;
 			if( index )
 				script_array_update(&sd->regs, reg, true);
+
+			if (signum(compare) != signum(p->value) && storm_is_npcvar(regname))
+				clif_npc_getareachar_unit(sd);
 		}
 		if (!reg_load)
 			p->flag.update = 1;/* either way, it will require either delete or replace */
 	} else if( val ) {
 		DBData prev;
+		int compare;
 
 		if( index )
 			script_array_update(&sd->regs, reg, false);
 
 		p = ers_alloc(num_reg_ers, struct script_reg_num);
+		compare = p->value;
 
 		p->value = val;
 		if (!reg_load)
@@ -9802,6 +10463,9 @@ bool pc_setregistry(struct map_session_data *sd, int64 reg, int64 val)
 			p = (struct script_reg_num *)db_data2ptr(&prev);
 			ers_free(num_reg_ers, p);
 		}
+
+		if (signum(compare) != signum(val) && storm_is_npcvar(regname))
+			clif_npc_getareachar_unit(sd);
 	}
 
 	if (!reg_load && p)
@@ -10508,6 +11172,10 @@ bool pc_equipitem(struct map_session_data *sd,short n,int req_pos,bool equipswit
 		}
 	}
 
+#ifdef STORM_ITEM_STATUS
+	storm_itempassive(sd, id->nameid, ICF_ITEM_EQUIP);
+#endif
+
 	status_calc_pc(sd,SCO_NONE);
 	if (flag) //Update skill data
 		clif_skillinfoblock(sd);
@@ -10623,7 +11291,7 @@ static void pc_unequipitem_sub(struct map_session_data *sd, int n, int flag) {
  * @return True on success or false on failure
  */
 bool pc_unequipitem(struct map_session_data *sd, int n, int flag) {
-	int i, pos;
+	int i, pos, nameid;
 
 	nullpo_retr(false,sd);
 
@@ -10650,6 +11318,8 @@ bool pc_unequipitem(struct map_session_data *sd, int n, int flag) {
 
 	if (battle_config.battle_log)
 		ShowInfo("unequip %d %x:%x\n",n,pc_equippoint(sd,n),pos);
+
+	nameid = sd->inventory_data[n]->nameid;
 
 	for(i = 0; i < EQI_MAX; i++) {
 		if (pos & equip_bitmask[i])
@@ -10733,6 +11403,10 @@ bool pc_unequipitem(struct map_session_data *sd, int n, int flag) {
 	// On ammo change
 	if (sd->inventory_data[n]->type == IT_AMMO && (sd->inventory_data[n]->nameid != ITEMID_SILVER_BULLET || sd->inventory_data[n]->nameid != ITEMID_PURIFICATION_BULLET || sd->inventory_data[n]->nameid != ITEMID_SILVER_BULLET_))
 		status_change_end(&sd->bl, SC_P_ALTER, INVALID_TIMER);
+
+#ifdef STORM_ITEM_STATUS
+	storm_itempassive(sd, nameid, ICF_ITEM_UNEQUIP);
+#endif
 
 	pc_unequipitem_sub(sd, n, flag);
 
@@ -13368,6 +14042,7 @@ void pc_attendance_claim_reward( struct map_session_data* sd ){
 	std::shared_ptr<s_attendance_reward> reward = period->rewards[attendance_counter - 1];
 
 	struct mail_message msg;
+	struct item_data* id = itemdb_search(reward->item_id);
 
 	memset( &msg, 0, sizeof( struct mail_message ) );
 
@@ -13379,6 +14054,7 @@ void pc_attendance_claim_reward( struct map_session_data* sd ){
 	msg.item[0].nameid = reward->item_id;
 	msg.item[0].amount = reward->amount;
 	msg.item[0].identify = 1;
+	STORM_DURABILITY(id, msg.item[0]);
 
 	msg.status = MAIL_NEW;
 	msg.type = MAIL_INBOX_NORMAL;

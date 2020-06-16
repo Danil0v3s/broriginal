@@ -1,0 +1,386 @@
+//===== rAthena Script =======================================
+//= Stormbreaker NPC List
+//===== By: ==================================================
+//= Epoque
+//===== Current Version: =====================================
+//= 1.0
+//===== Compatible With: =====================================
+//= rAthena Project
+//===== Description: =========================================
+//= Contains NPC examples using new script commands
+//============================================================
+
+prontera,148,185,3	script	Inventory Select	629,{
+	mes "[Inventory Select]";
+	mes "What should I ask for?";
+	next;
+	
+	menu "Healing Items",-,"Miscellaneous",-,"Armor",-,"Weapons",-,"Cards",-,"Red, Orange or Yellow Potion",-;
+		
+	setarray @mask_options[0], 0x1, 0x4, 0x8, 0x8, 0x10, 0x1;
+	setarray @equip_options[0], 0, 0, 0x3FD, 0x2, 0, 0;
+	
+	@mask = @mask_options[@menu - 1];
+	@equip = @equip_options[@menu - 1];
+	
+	if (@menu < 6)
+		@selection = inventoryselect(@mask, @equip);
+	else
+		@selection = inventoryselect(@mask, @equip, 501, 502, 503);
+	
+	switch (@selection)
+	{
+		case -1:
+			mes "[Inventory Select]";
+			mes "Ah, you don't have any!";
+			close;
+			
+		case 0:
+			mes "[Inventory Select]";
+			mes "That's a shame!";
+			close;
+			
+		case 1:
+			mes "[Inventory Select]";
+			mes "Congratulations!";
+			mes " ";
+			
+			@name$ = getitemname(@select_id);
+			mes "You selected <ITEM>" + @name$ + "<INFO>" + @select_id + "</INFO></ITEM>!";
+			mes "You have ^000088" + @select_amount + "^000000 of these.";
+			close;
+	}	
+}
+
+prontera,150,185,3	script	Skill Select	616,{
+	mes "[Skill Select]";
+	mes "Please select a magic skill!";
+	next;
+	
+	@skill = skillselect("MG_FIREBOLT", "MG_COLDBOLT", "MG_LIGHTNINGBOLT");
+	
+	switch (@skill)
+	{
+		case -1:
+			mes "[Skill Select]";
+			mes "Whoops!";
+			close;
+			
+		case 0:
+			mes "[Skill Select]";
+			mes "Fine, keep your secrets!";
+			close;
+		
+		case 14:
+			@name$ = "Cold Bolt";
+			break;
+		case 19:
+			@name$ = "Fire Bolt";
+			break;
+		case 20:
+			@name$ = "Lightning Bolt";
+			break;
+			
+		default:
+			mes "[Skill Select]";
+			mes "How did you select ^000088" + @skill + "^000000!?";
+			close;
+	}
+		
+	mes "[Skill Select]";
+	mes "Aha, so you like ^000088" + @name$ + "^000000?";
+	close;
+}
+
+prontera,152,185,3	script	Durability Repair	635,{
+	@count = 0;
+	@cost = 0;
+	
+	while ((@id = getdurabilityid(1 + @count)) > 0) {
+		@cost += 100 - getdurability(1 + @count);
+		@count++;
+	}
+
+	if (@count == 0) {
+		mes "[Durability Repair]";
+		mes "You have no items to repair!";
+		close;
+	}
+	
+	@cost *= 100;
+	
+	mes "[Durability Repair]";
+	mes "You have " + @count + " items which need repairing, this will cost you " + @cost + " Zeny, is this okay?";
+	next;
+	
+	menu "Yes",-,"No",-;
+		
+	if (@menu == 2) {
+		mes "[Durability Repair]";
+		mes "Nevermind then!";
+		close;
+	}
+	
+	if (Zeny < @cost) {
+		mes "[Durability Repair]";
+		mes "You don't have enough Zeny!";
+		close;
+	}
+	
+	Zeny -= @cost;
+	
+	while ((@id = getdurabilityid(1)) > 0) {
+		setdurability 1, 100;
+	}
+	
+	skilleffect "BS_REPAIRWEAPON",1;
+	
+	mes "[Durability Repair]";
+	mes "It's done!";
+	close;
+}
+
+prontera,154,185,3,#ShowMe	script	Small Fairy	620,{
+	mes "[Small Fairy]";
+	mes "Oh gosh, you can see me?!";
+	close;
+}
+
+prontera,156,185,3	script	Fairy Trickster	643,{
+	if (#ShowMe) {
+		mes "[Fairy Trickster]";
+		mes "I can make my friend disappear again if you like?!";
+		next;
+		
+		menu "Do your magic!",-,"I'd rather you didn't..",-;
+		
+		if (@menu == 1) {
+			#ShowMe = 0;
+			mes "[Fairy Trickster]";
+			mes "Poof!";
+			close;
+		}
+		
+		mes "[Fairy Trickster]";
+		mes "Well you're no fun!";
+		close;
+	} else {
+		mes "[Fairy Trickster]";
+		mes "My friend is hiding nearby, I bet you can't see him! I know, I can get him to reveal himself just to you if you like?!";
+		next;
+		
+		menu "Yes please!",-,"Umm... no thank you",-;
+		
+		if (@menu == 1) {
+			#ShowMe = 1;
+			
+			mes "[Fairy Trickster]";
+			mes "Ta-daa!!";
+			close;
+		}
+			
+		mes "[Fairy Trickster]";
+		mes "Well, nevermind then!";
+		close;
+	}
+}
+
+prontera,158,185,3	script	Party Monster	637,{
+	mes "[Party Monster]";
+	mes "Spawn a party monster?";
+	next;
+	
+	menu "Yes",-,"No",-;
+	
+	mes "[Party Monster]";
+	
+	if (@menu == 2)
+		mes "Nevermind then!";
+	else {
+		partymonster "prontera",160,180,"Party!",1275,1;
+		mes "Here you go!";
+	}
+	
+	close;
+}
+
+prontera,160,185,3	script	Refining	652,{
+
+	if (PACKETVER < 20161012) {
+		mes "[Refining]";
+		mes "Arr, I'm sorry but your client version doesn't support refine interface!";
+		close;
+	}
+	
+	mes "[Refining]";
+	mes "Arr, I am the master refiner! Would you like to take a look at the new refine interface?!";
+	next;
+	
+	menu "Yes, I'd love to see it!",-,"No thanks",-;
+	
+	if (@menu == 1)
+	{	
+		openrefine;
+		close;
+	}
+	
+	mes "[Refining]";
+	mes "Arr... nevermind then..";
+	close;
+}
+
+prontera,162,185,3	script	Crafting	561,{
+
+	if (PACKETVER < 20161012) {
+		mes "[Crafting]";
+		mes "Arr, I'm sorry but your client version doesn't support crafting interface!";
+		close;
+	}
+	
+	mes "[Crafting]";
+	mes "Arr, I am the master crafter! Would you like to take a look at the new craft interface?!";
+	next;
+	
+	menu "Yes, I'd love to see it!",-,"No thanks",-;
+	
+	if (@menu == 1)
+	{	
+		opencraft;
+		close;
+	}
+	
+	mes "[Crafting]";
+	mes "Arr... nevermind then..";
+	close;
+}
+
+prontera,164,185,3	script	Enchantment	559,{
+
+	if (PACKETVER < 20161012) {
+		mes "[Enchantment]";
+		mes "Arr, I'm sorry but your client version doesn't support enchantment interface!";
+		close;
+	}
+	
+	mes "[Enchantment]";
+	mes "Arr, I am the master enchanter! Would you like to take a look at the new enchantment interface?!";
+	next;
+	
+	menu "Yes, I'd love to see it!",-,"No thanks",-;
+	
+	if (@menu == 1)
+	{	
+		openenchant;
+		close;
+	}
+	
+	mes "[Enchantment]";
+	mes "Arr... nevermind then..";
+	close;
+}
+
+prontera,166,185,3	script	Dynamic Shop	635,{
+
+	mes "[Dynamic Shop]";
+	mes "Hello there! I sell a good collection of different wares in different shops, how can I serve you today?";
+	next;
+	
+	menu "I'd like healing items",-,"Sell me some cash items!",-,"I've got some Gold..",-,"Nothing",-;
+	
+	if (@menu == 1)
+	{
+		mes "[Dynamic Shop]";
+		mes "Healing items it is!";
+		close2;
+	
+		setarray @items[0], 501, 100, 502, 500, 503, 1000;
+		
+		switch (rand(1,3))
+		{
+			case 1:
+				@items[6] = 607;
+				@items[7] = 5000;
+				break;
+			case 2:
+				@items[6] = 505;
+				@items[7] = 2000;
+				break;
+			case 3:
+				@items[6] = 551;
+				@items[7] = 6000;
+				break;
+		}
+		
+		openshop @items, 0;
+	}
+	else if (@menu == 2)
+	{
+		mes "[Dynamic Shop]";
+		mes "The spectacular cash shop it is then!";
+		close2;
+		
+		setarray @items[0], 1103, 2, 1109, 3, 1124, 4, 1143, 6;
+		
+		switch (rand(1, 3))
+		{
+			case 1:
+				@items[8] = 1145;
+				@items[9] = 10;
+				break;
+			case 2:
+				@items[8] = 1149;
+				@items[9] = 11;
+				break;
+			case 3:
+				@items[8] = 1141;
+				@items[9] = 8;
+				break;
+		}
+		
+		openshop @items, 0x3;
+	}
+	else if (@menu == 3)
+	{
+		mes "[Dynamic Shop]";
+		mes "Say no more! I can trade some Gold!";
+		close2;
+		
+		setarray @items[0], 2601, 3, 2611, 5, 2624, 8;
+		
+		switch (rand(1, 3))
+		{
+			case 1:
+				@items[6] = 2618;
+				@items[7] = 4;
+				break;
+			case 2:
+				@items[6] = 2632;
+				@items[7] = 15;
+				break;
+			case 3:
+				@items[6] = 2629;
+				@items[7] = 1000;
+				break;
+		}
+		
+		openshop @items, 0x5, 969;
+	}
+	else
+	{
+		mes "[Dynamic Shop]";
+		mes "Pif! Well fine, see if I care!";
+		close;
+	}
+}
+
+// Used to sell items to test the bazaar shop
+prontera,147,174,6	shop	Sell Items	626,501:100
+
+// Shop for all items available in the bazaar
+prontera,147,172,6	bazaarshop	Bazaar	582
+
+// Prevents item durability decreasing in Prontera
+prontera	mapflag	item_durability	0
+
+// Reduces item durability loss by 50% in Payon
+payon	mapflag	item_durability	50

@@ -11,6 +11,7 @@
 #include "cbasetypes.hpp"
 #include "db.hpp"
 #include "timer.hpp" // t_tick
+#include "stormbreaker.hpp"
 
 #ifndef PACKETVER
 	#error Please define PACKETVER in src/config/packets.hpp
@@ -254,6 +255,9 @@ struct item {
 	char favorite, bound;
 	uint64 unique_id;
 	unsigned int equipSwitch; // location(s) where item is equipped for equip switching (using enum equip_pos for bitmasking)
+#ifdef STORM_ITEM_DURABILITY
+	unsigned int durability;
+#endif
 };
 
 //Equip position constants
@@ -474,6 +478,26 @@ struct hotkey {
 };
 #endif
 
+#ifdef STORM_BAZAAR
+
+typedef struct s_bazaarsolditem {
+	unsigned int id;
+	unsigned short nameid;
+	unsigned short amount;
+
+} bazaarsolditem;
+
+typedef struct s_bazaarunlocked {
+	unsigned int id;
+	unsigned int bazaarid;
+	unsigned int accountid;
+	unsigned short available;
+	unsigned short bought;
+
+} bazaarunlocked;
+
+#endif
+
 struct mmo_charstatus {
 	uint32 char_id;
 	uint32 account_id;
@@ -537,6 +561,11 @@ struct mmo_charstatus {
 
 	unsigned char hotkey_rowshift;
 	unsigned long title_id;
+
+#ifdef STORM_BAZAAR
+	bazaarsolditem bazaar_sold[MAX_BAZAAR_SELL];
+	bazaarunlocked bazaar_unlocked[MAX_BAZAAR_ITEMS];
+#endif
 };
 
 typedef enum mail_status {

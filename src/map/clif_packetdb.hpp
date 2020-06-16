@@ -2439,4 +2439,14 @@
 	packet(0x0ADD, 22);
 #endif
 
+// Stormbreaker
+// 2016-10-12aRagexeRE
+#if PACKETVER >= 20161012
+	packet(0x0aa0, 2);
+	parseable_packet(0x0aa1, 4, clif_parse_refine_add, 2);
+	packet(0x0aa2, -1);
+	parseable_packet(0x0aa3, 7, clif_parse_refine_accept, 2, 4, 6);
+	parseable_packet(0x0aa4, 2, clif_parse_refine_close, 0);
+#endif
+
 #endif /* CLIF_PACKETDB_HPP */

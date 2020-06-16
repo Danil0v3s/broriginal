@@ -107,6 +107,9 @@ int mail_savemessage(struct mail_message* msg)
 	
 	StringBuf_Clear(&buf);
 	StringBuf_Printf(&buf,"INSERT INTO `%s` (`id`, `index`, `amount`, `nameid`, `refine`, `attribute`, `identify`, `unique_id`, `bound`", schema_config.mail_attachment_db);
+#ifdef STORM_ITEM_DURABILITY
+	StringBuf_AppendStr(&buf, ",`durability`");
+#endif
 	for (j = 0; j < MAX_SLOTS; j++)
 		StringBuf_Printf(&buf, ", `card%d`", j);
 	for (j = 0; j < MAX_ITEM_RDM_OPT; ++j) {
@@ -128,6 +131,9 @@ int mail_savemessage(struct mail_message* msg)
 		}
 
 		StringBuf_Printf(&buf, "('%" PRIu64 "', '%hu', '%d', '%hu', '%d', '%d', '%d', '%" PRIu64 "', '%d'", (uint64)msg->id, i, msg->item[i].amount, msg->item[i].nameid, msg->item[i].refine, msg->item[i].attribute, msg->item[i].identify, msg->item[i].unique_id, msg->item[i].bound);
+#ifdef STORM_ITEM_DURABILITY
+		StringBuf_Printf(&buf, ",'%u'", msg->item[i].durability);
+#endif
 		for (j = 0; j < MAX_SLOTS; j++)
 			StringBuf_Printf(&buf, ", '%hu'", msg->item[i].card[j]);
 		for (j = 0; j < MAX_ITEM_RDM_OPT; ++j) {
@@ -154,6 +160,7 @@ bool mail_loadmessage(int mail_id, struct mail_message* msg)
 	int i, j;
 	StringBuf buf;
 	char* data;
+	size_t offset = 7;
 
 	if( SQL_ERROR == Sql_Query(sql_handle, "SELECT `id`,`send_name`,`send_id`,`dest_name`,`dest_id`,`title`,`message`,`time`,`status`,`zeny`,`type` FROM `%s` WHERE `id` = '%d'", schema_config.mail_db, mail_id )
 	||  SQL_SUCCESS != Sql_NextRow(sql_handle) ){
@@ -186,6 +193,10 @@ bool mail_loadmessage(int mail_id, struct mail_message* msg)
 
 	StringBuf_Init(&buf);
 	StringBuf_AppendStr(&buf, "SELECT `amount`,`nameid`,`refine`,`attribute`,`identify`,`unique_id`,`bound`");
+#ifdef STORM_ITEM_DURABILITY
+	StringBuf_AppendStr(&buf, ",`durability`");
+	offset++;
+#endif
 	for (j = 0; j < MAX_SLOTS; j++)
 		StringBuf_Printf(&buf, ",`card%d`", j);
 	for (j = 0; j < MAX_ITEM_RDM_OPT; ++j) {
@@ -217,14 +228,18 @@ bool mail_loadmessage(int mail_id, struct mail_message* msg)
 		Sql_GetData(sql_handle,6, &data, NULL); msg->item[i].bound = atoi(data);
 		msg->item[i].expire_time = 0;
 
+#ifdef STORM_ITEM_DURABILITY
+		Sql_GetData(sql_handle, 7, &data, NULL); msg->item[i].durability = atoi(data);
+#endif
+
 		for( j = 0; j < MAX_SLOTS; j++ ){
-			Sql_GetData(sql_handle,7 + j, &data, NULL); msg->item[i].card[j] = atoi(data);
+			Sql_GetData(sql_handle,offset + j, &data, NULL); msg->item[i].card[j] = atoi(data);
 		}
 
 		for( j = 0; j < MAX_ITEM_RDM_OPT; j++ ){
-			Sql_GetData(sql_handle, 7 + MAX_SLOTS + j * 3, &data, NULL); msg->item[i].option[j].id = atoi(data);
-			Sql_GetData(sql_handle, 8 + MAX_SLOTS + j * 3, &data, NULL); msg->item[i].option[j].value = atoi(data);
-			Sql_GetData(sql_handle, 9 + MAX_SLOTS + j * 3, &data, NULL); msg->item[i].option[j].param = atoi(data);
+			Sql_GetData(sql_handle, offset + MAX_SLOTS + j * 3, &data, NULL); msg->item[i].option[j].id = atoi(data);
+			Sql_GetData(sql_handle, offset + 1 + MAX_SLOTS + j * 3, &data, NULL); msg->item[i].option[j].value = atoi(data);
+			Sql_GetData(sql_handle, offset + 2 + MAX_SLOTS + j * 3, &data, NULL); msg->item[i].option[j].param = atoi(data);
 		}
 	}
 

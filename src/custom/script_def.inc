@@ -8,4 +8,19 @@
  *	BUILDIN_DEF(command_name,"parameters"),
  **/
 
-//BUILDIN_DEF(example,""),
+BUILDIN_DEF(inventoryselect, "i?*"),
+BUILDIN_DEF(skillselect, "?*"),
+BUILDIN_DEF(partymonster, "siisii*"),
+BUILDIN_DEF(openrefine, ""),
+BUILDIN_DEF(opencraft, ""),
+BUILDIN_DEF(openenchant, ""),
+BUILDIN_DEF(openshop, "ri*"),
+BUILDIN_DEF(statusbonus, "is"),
+
+#ifdef STORM_ITEM_DURABILITY
+BUILDIN_DEF(getdurabilityid, "i"),
+BUILDIN_DEF(getdurability, "*"),
+BUILDIN_DEF(getequipdurability, "i"),
+BUILDIN_DEF(setdurability, "ii"),
+#endif
+

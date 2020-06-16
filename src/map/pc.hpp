@@ -20,6 +20,7 @@
 #include "script.hpp" // struct script_reg, struct script_regstr
 #include "searchstore.hpp"  // struct s_search_store_info
 #include "status.hpp" // unit_data
+#include "stormbreaker.hpp"
 #include "unit.hpp" // unit_data
 #include "vending.hpp" // struct s_vending
 
@@ -115,6 +116,44 @@ enum e_additem_result : uint8 {
 	ADDITEM_STACKLIMIT
 };
 
+enum weapon_type {
+	W_FIST,	//Bare hands
+	W_DAGGER,	//1
+	W_1HSWORD,	//2
+	W_2HSWORD,	//3
+	W_1HSPEAR,	//4
+	W_2HSPEAR,	//5
+	W_1HAXE,	//6
+	W_2HAXE,	//7
+	W_MACE,	//8
+	W_2HMACE,	//9 (unused)
+	W_STAFF,	//10
+	W_BOW,	//11
+	W_KNUCKLE,	//12
+	W_MUSICAL,	//13
+	W_WHIP,	//14
+	W_BOOK,	//15
+	W_KATAR,	//16
+	W_REVOLVER,	//17
+	W_RIFLE,	//18
+	W_GATLING,	//19
+	W_SHOTGUN,	//20
+	W_GRENADE,	//21
+	W_HUUMA,	//22
+	W_2HSTAFF,	//23
+	MAX_WEAPON_TYPE,
+	// dual-wield constants
+	W_DOUBLE_DD, // 2 daggers
+	W_DOUBLE_SS, // 2 swords
+	W_DOUBLE_AA, // 2 axes
+	W_DOUBLE_DS, // dagger + sword
+	W_DOUBLE_DA, // dagger + axe
+	W_DOUBLE_SA, // sword + axe
+	MAX_WEAPON_TYPE_ALL,
+};
+
+#define WEAPON_TYPE_ALL ((1<<MAX_WEAPON_TYPE)-1)
+
 struct skill_cooldown_entry {
 	unsigned short skill_id;
 	int timer;
@@ -173,13 +212,45 @@ struct weapon_data {
 	short hp_drain_class[CLASS_MAX];
 	short sp_drain_class[CLASS_MAX];
 
+	// Stormbreaker
+	int mdef_ratio_atk_ele;
+	int mdef_ratio_atk_race;
+	short hp_attack_ratio[RC_MAX];
+	short sp_attack_ratio[RC_MAX];
+
 	struct drain_data {
 		short rate; ///< Success rate 10000 = 100%
 		short per;  ///< Drain value/rate per attack
-	} hp_drain_rate, sp_drain_rate;
+	} hp_drain_rate, sp_drain_rate, hp_drain_rate_race[RC_MAX], sp_drain_rate_race[RC_MAX];
 
 	std::vector<s_item_bonus> add_dmg;
 	std::vector<s_addele2> addele2;
+};
+
+/// Bonus expansion pack bonus struct
+struct s_bonusvalue {
+	int value;
+};
+
+/// Bonus expansion pack bonus2 struct
+struct s_bonusvalue2 {
+	int value1;
+	int value2; // rate
+};
+
+/// Bonus expansion pack bonus3 struct
+struct s_bonusvalue3 {
+	int value1;
+	int value2;
+	int value3; // rate
+};
+
+/// Bonus expansion pack bonus4 struct
+struct s_bonusvalue4 {
+	int value1;
+	int value2;
+	int value3;
+	int value4; // rate
 };
 
 /// AutoSpell bonus struct
@@ -250,6 +321,18 @@ struct s_regen {
 	int tick;
 };
 
+/// Status bonus entry struct
+struct s_statusbonus_entry {
+	char* script;
+	bool active;
+};
+
+/// Status bonus struct
+struct s_statusbonus {
+	sc_type type;
+	std::vector<s_statusbonus_entry> entries;
+};
+
 struct map_session_data {
 	struct block_list bl;
 	struct unit_data ud;
@@ -318,6 +401,14 @@ struct map_session_data {
 		bool cashshop_open;
 		bool sale_open;
 		unsigned int block_action : 10;
+
+		// Stormbreaker
+		bool inventory_select; // Whether the player has the inventory select screen open
+		bool skill_select; // Whether the player has the skill select screen open
+#if PACKETVER >= 20161012
+		bool refine_open;
+#endif
+		refine_process_type refine_flag;
 	} state;
 	struct {
 		unsigned char no_weapon_damage, no_magic_damage, no_misc_damage;
@@ -332,6 +423,21 @@ struct map_session_data {
 		unsigned int bonus_coma : 1;
 		unsigned int no_mado_fuel : 1; // Disable Magic_Gear_Fuel consumption [Secret]
 		unsigned int no_walk_delay : 1;
+
+		// <Epoque>
+		unsigned int keep_buffs : 1;
+		unsigned int no_chat : 1;
+		unsigned int snap : 1;
+		unsigned int zeny_attack;
+		unsigned int skill_hp : 1;
+		unsigned int no_item : 1;
+		unsigned int no_skill : 1;
+		unsigned int no_walk : 1;
+		unsigned int undetectable : 1;
+		unsigned int item_hptosp : 1;
+		unsigned int item_sptohp : 1;
+		unsigned int zeny_cost : 1;
+		unsigned int hp_cost : 1;
 	} special_state;
 	uint32 login_id1, login_id2;
 	unsigned short class_;	//This is the internal job ID used by the map server to simplify comparisons/queries/etc. [Skotlex]
@@ -450,6 +556,13 @@ struct map_session_data {
 	int ignore_mdef_by_race2[RC2_MAX];
 	int dropaddrace[RC_MAX];
 	int dropaddclass[CLASS_MAX];
+
+	// <Epoque>
+	short breakequip[EQI_MAX];
+	unsigned char noequip[EQI_MAX];
+	short weapondef[MAX_WEAPON_TYPE];
+	short durabilitydef[EQI_MAX];
+
 	// zeroed arrays end here.
 
 	std::vector<s_autospell> autospell, autospell2, autospell3;
@@ -461,6 +574,44 @@ struct map_session_data {
 	std::vector<s_addele2> subele2;
 	std::vector<s_vanish_bonus> sp_vanish, hp_vanish;
 	std::vector<s_autobonus> autobonus, autobonus2, autobonus3; //Auto script on attack, when attacked, on skill usage
+
+	// Stormbreaker
+	std::vector<s_bonusvalue2> criticaldodge;
+	std::vector<s_bonusvalue3> areaskill;
+	std::vector<s_bonusvalue3> skillgainsp;
+	std::vector<s_bonusvalue2> statusdamage;
+	std::vector<s_bonusvalue2> statusresist;
+	std::vector<s_bonusvalue3> statusswitch;
+	std::vector<s_bonusvalue3> attackemotion;
+	std::vector<s_bonusvalue2> statusrate;
+	std::vector<s_bonusvalue3> ignoredefele;
+	std::vector<s_bonusvalue3> ignoredefrace;
+	std::vector<s_bonusvalue4> areastatus;
+	std::vector<s_bonusvalue4> areastatusonhit;
+	std::vector<s_bonusvalue2> skillchain;
+	std::vector<s_bonusvalue2> skillbounce;
+	std::vector<s_bonusvalue2> subjob;
+	std::vector<s_bonusvalue2> addjob;
+	std::vector<s_bonusvalue2> mobdropitem;
+	std::vector<s_bonusvalue2> mobdropitemgroup;
+	std::vector<s_bonusvalue3> mobracedropitem;
+	std::vector<s_bonusvalue3> mobclassdropitem;
+	std::vector<s_bonusvalue2> selfdropitem;
+	std::vector<s_bonusvalue2> selfdropitemgroup;
+	std::vector<s_bonusvalue3> statusinflict;
+	std::vector<s_bonusvalue2> multidrop;
+	std::vector<s_bonusvalue2> doublecast;
+	std::vector<s_bonusvalue2> gravity;
+	std::vector<s_bonusvalue> itemattack;
+	std::vector<s_bonusvalue2> atkratechance;
+	std::vector<s_bonusvalue2> matkratechance;
+	std::vector<s_bonusvalue> skillhpcost;
+	std::vector<s_bonusvalue2> skillitemcost;
+	std::vector<s_bonusvalue3> autohpuse;
+	std::vector<s_bonusvalue3> autospuse;
+	std::vector<s_bonusvalue3> autostatususe;
+	std::vector<s_bonusvalue2> skillrequirementcost;
+	std::vector<s_statusbonus> statusbonus;
 
 	// zeroed structures start here
 	struct s_regen {
@@ -519,6 +670,36 @@ struct map_session_data {
 		uint8 absorb_dmg_maxhp; // [Cydh]
 		short critical_rangeatk;
 		short weapon_atk_rate, weapon_matk_rate;
+
+		// <Epoque>
+		short homintimacy;
+		short skillmove;
+		short evadetrap;
+		short magicareadefrate;
+		short magicsingledefrate;
+		short evadecritical;
+		s_bonusvalue2 ignoregtb;
+		short healattack;
+		short statusrate;
+		short switchplace;
+		short skillchain;
+		short skillbounce;
+		short petintimacy;
+		short interrupt;
+		short invert;
+		short doublecast;
+		short ignoreflee;
+		short death;
+		short wateratkrate;
+		short watermatkrate;
+		short noconsume;
+		short noammo;
+		short autolife;
+		unsigned int damagelimit;
+		unsigned int hplimit;
+		unsigned int splimit;
+		short durabilitydef;
+		short skillrequirementcost;
 	} bonus;
 	// zeroed vars end here.
 
@@ -582,6 +763,13 @@ struct map_session_data {
 	struct s_buyingstore buyingstore;
 
 	struct s_search_store_info searchstore;
+
+	// Stormbreaker
+	openshoplist* openshop;
+#ifdef STORM_BAZAAR
+	int bazaar_shop_id;
+	int bazaar_timer_id;
+#endif
 
 	struct pet_data *pd;
 	struct homun_data *hd;	// [blackhole89]
@@ -782,44 +970,6 @@ extern struct eri *str_reg_ers;
 /* Global Expiration Timer ID */
 extern int pc_expiration_tid;
 
-enum weapon_type {
-	W_FIST,	//Bare hands
-	W_DAGGER,	//1
-	W_1HSWORD,	//2
-	W_2HSWORD,	//3
-	W_1HSPEAR,	//4
-	W_2HSPEAR,	//5
-	W_1HAXE,	//6
-	W_2HAXE,	//7
-	W_MACE,	//8
-	W_2HMACE,	//9 (unused)
-	W_STAFF,	//10
-	W_BOW,	//11
-	W_KNUCKLE,	//12
-	W_MUSICAL,	//13
-	W_WHIP,	//14
-	W_BOOK,	//15
-	W_KATAR,	//16
-	W_REVOLVER,	//17
-	W_RIFLE,	//18
-	W_GATLING,	//19
-	W_SHOTGUN,	//20
-	W_GRENADE,	//21
-	W_HUUMA,	//22
-	W_2HSTAFF,	//23
-	MAX_WEAPON_TYPE,
-	// dual-wield constants
-	W_DOUBLE_DD, // 2 daggers
-	W_DOUBLE_SS, // 2 swords
-	W_DOUBLE_AA, // 2 axes
-	W_DOUBLE_DS, // dagger + sword
-	W_DOUBLE_DA, // dagger + axe
-	W_DOUBLE_SA, // sword + axe
-	MAX_WEAPON_TYPE_ALL,
-};
-
-#define WEAPON_TYPE_ALL ((1<<MAX_WEAPON_TYPE)-1)
-
 enum ammo_type {
 	A_ARROW = 1,
 	A_DAGGER,   //2
@@ -912,7 +1062,7 @@ extern struct s_job_info job_info[CLASS_COUNT];
 #define pc_isidle_party(sd)   ( (sd)->chatID || (sd)->state.vending || (sd)->state.buyingstore || DIFF_TICK(last_tick, (sd)->idletime) >= battle_config.idle_no_share )
 #define pc_isidle_hom(sd)     ( (sd)->hd && ( (sd)->chatID || (sd)->state.vending || (sd)->state.buyingstore || DIFF_TICK(last_tick, (sd)->idletime) >= battle_config.hom_idle_no_share ) )
 #define pc_istrading(sd)      ( (sd)->npc_id || (sd)->state.vending || (sd)->state.buyingstore || (sd)->state.trading )
-#define pc_cant_act(sd)       ( (sd)->npc_id || (sd)->state.vending || (sd)->state.buyingstore || (sd)->chatID || ((sd)->sc.opt1 && (sd)->sc.opt1 != OPT1_BURNING) || (sd)->state.trading || (sd)->state.storage_flag || (sd)->state.prevend )
+#define pc_cant_act(sd)       ( (sd)->npc_id || (sd)->state.vending || (sd)->state.buyingstore || (sd)->chatID || ((sd)->sc.opt1 && (sd)->sc.opt1 != OPT1_BURNING) || (sd)->state.trading || (sd)->state.storage_flag || (sd)->state.prevend || (sd)->state.refine_open )
 
 /* equals pc_cant_act except it doesn't check for chat rooms or npcs */
 #define pc_cant_act2(sd)       ( (sd)->state.vending || (sd)->state.buyingstore || ((sd)->sc.opt1 && (sd)->sc.opt1 != OPT1_BURNING) || (sd)->state.trading || (sd)->state.storage_flag || (sd)->state.prevend )

@@ -1144,6 +1144,9 @@ int npc_touch_areanpc(struct map_session_data* sd, int16 m, int16 x, int16 y)
 			continue;
 		}
 
+		if (!storm_has_npcvar(sd, mapdata->npc[i]))
+			return 1;
+		
 		if (x >= mapdata->npc[i]->bl.x - xs && x <= mapdata->npc[i]->bl.x + xs && y >= mapdata->npc[i]->bl.y - ys && y <= mapdata->npc[i]->bl.y + ys) {
 			f = 0;
 
@@ -1200,7 +1203,7 @@ int npc_touch_areanpc2(struct mob_data *md)
 
 	for( i = 0; i < mapdata->npc_num_area; i++ )
 	{
-		if( mapdata->npc[i]->sc.option&(OPTION_INVISIBLE|OPTION_CLOAK) )
+		if( mapdata->npc[i]->sc.option&(OPTION_INVISIBLE|OPTION_CLOAK) || *mapdata->npc[i]->variable )
 			continue;
 
 		switch( mapdata->npc[i]->subtype )
@@ -1411,6 +1414,10 @@ int npc_click(struct map_session_data* sd, struct npc_data* nd)
 	if (nd->class_ < 0 || nd->sc.option&(OPTION_INVISIBLE|OPTION_HIDE))
 		return 1;
 
+	if (!storm_has_npcvar(sd, nd))
+		return 1;
+	
+
 	if (sd->state.block_action & PCBLOCK_NPCCLICK) {
 		clif_msg(sd, WORK_IN_PROGRESS);
 		return 1;
@@ -1451,6 +1458,11 @@ int npc_click(struct map_session_data* sd, struct npc_data* nd)
 		case NPCTYPE_TOMB:
 			run_tomb(sd,nd);
 			break;
+#ifdef STORM_BAZAAR
+		case NPCTYPE_BAZAARSHOP:
+			clif_bazaarshop_open(sd, nd);
+			break;
+#endif
 	}
 
 	return 0;
@@ -1731,10 +1743,12 @@ int npc_cashshop_buylist(struct map_session_data *sd, int points, int count, uns
 		if( !pet_create_egg(sd,nameid) ) {
 			struct item item_tmp;
 			unsigned short get_amt = amount;
+			struct item_data* id = itemdb_search(nameid);
 
 			memset(&item_tmp, 0, sizeof(item_tmp));
 			item_tmp.nameid = nameid;
 			item_tmp.identify = 1;
+			STORM_DURABILITY(id, item_tmp);
 
 			if ((itemdb_search(nameid))->flag.guid)
 				get_amt = 1;
@@ -1885,10 +1899,12 @@ int npc_cashshop_buy(struct map_session_data *sd, unsigned short nameid, int amo
 	if( !pet_create_egg(sd, nameid) ) {
 		struct item item_tmp;
 		unsigned short get_amt = amount, j;
+		struct item_data* id = itemdb_search(nameid);
 
 		memset(&item_tmp, 0, sizeof(item_tmp));
 		item_tmp.nameid = nameid;
 		item_tmp.identify = 1;
+		STORM_DURABILITY(id, item_tmp);
 
 		if (item->flag.guid)
 			get_amt = 1;
@@ -2051,8 +2067,9 @@ uint8 npc_buylist(struct map_session_data* sd, uint16 n, struct s_npc_buy_list *
 			pet_create_egg(sd, nameid);
 		else {
 			unsigned short get_amt = amount;
+			struct item_data* id;
 
-			if ((itemdb_search(nameid))->flag.guid)
+			if ((id = itemdb_search(nameid))->flag.guid)
 				get_amt = 1;
 
 			for (k = 0; k < amount; k += get_amt) {
@@ -2060,6 +2077,7 @@ uint8 npc_buylist(struct map_session_data* sd, uint16 n, struct s_npc_buy_list *
 				memset(&item_tmp, 0, sizeof(item_tmp));
 				item_tmp.nameid = nameid;
 				item_tmp.identify = 1;
+				STORM_DURABILITY(id, item_tmp);
 
 				pc_additem(sd,&item_tmp,get_amt,LOG_TYPE_NPC);
 			}
@@ -2097,6 +2115,9 @@ static int npc_selllist_sub(struct map_session_data* sd, int n, unsigned short* 
 	int key_identify = 0;
 	int key_card[MAX_SLOTS];
 	int key_option_id[MAX_ITEM_RDM_OPT], key_option_val[MAX_ITEM_RDM_OPT], key_option_param[MAX_ITEM_RDM_OPT];
+#ifdef STORM_ITEM_DURABILITY
+	int key_durability = 0;
+#endif
 
 	// discard old contents
 	script_cleararray_pc( sd, "@sold_nameid" );
@@ -2136,6 +2157,9 @@ static int npc_selllist_sub(struct map_session_data* sd, int n, unsigned short* 
 			script_setarray_pc( sd, "@sold_refine", i, sd->inventory.u.items_inventory[idx].refine, &key_refine );
 			script_setarray_pc( sd, "@sold_attribute", i, sd->inventory.u.items_inventory[idx].attribute, &key_attribute );
 			script_setarray_pc( sd, "@sold_identify", i, sd->inventory.u.items_inventory[idx].identify, &key_identify );
+#ifdef STORM_ITEM_DURABILITY
+			script_setarray_pc(sd, "@sold_durability", i, sd->inventory.u.items_inventory[idx].durability, &key_durability);
+#endif
 
 			for( j = 0; j < MAX_SLOTS; j++ )
 			{// store each of the cards from the equipment in the array
@@ -2225,6 +2249,7 @@ uint8 npc_selllist(struct map_session_data* sd, int n, unsigned short *item_list
 	for( i = 0; i < n; i++ )
 	{
 		int amount, idx;
+		uint16 nameid;
 
 		idx    = item_list[i*2]-2;
 		amount = item_list[i*2+1];
@@ -2233,6 +2258,8 @@ uint8 npc_selllist(struct map_session_data* sd, int n, unsigned short *item_list
 		if( sd->inventory_data[idx] == nullptr ){
 			return 1;
 		}
+
+		nameid = sd->inventory_data[idx]->nameid;
 
 		if( sd->inventory_data[idx]->type == IT_PETEGG && sd->inventory.u.items_inventory[idx].card[0] == CARD0_PET )
 		{
@@ -2243,6 +2270,11 @@ uint8 npc_selllist(struct map_session_data* sd, int n, unsigned short *item_list
 		}
 
 		pc_delitem(sd, idx, amount, 0, 6, LOG_TYPE_NPC);
+
+#ifdef STORM_BAZAAR
+		// Stormbreaker
+		storm_bazaar_sold(sd, nameid, (uint16)amount);
+#endif
 	}
 
 	if( z > MAX_ZENY )
@@ -2755,13 +2787,17 @@ static const char* npc_parse_warp(char* w1, char* w2, char* w3, char* w4, const 
 {
 	int m;
 	short x, y, xs, ys, to_x, to_y;
+	short facing;
 	unsigned short i;
 	char mapname[MAP_NAME_LENGTH_EXT], to_mapname[MAP_NAME_LENGTH_EXT];
+	char variable[MAX_NPC_VARIABLE_NAME];
 	struct npc_data *nd;
+
+	memset(variable, 0, sizeof(variable));
 
 	// w1=<from map name>,<fromX>,<fromY>,<facing>
 	// w4=<spanx>,<spany>,<to map name>,<toX>,<toY>
-	if( sscanf(w1, "%15[^,],%6hd,%6hd", mapname, &x, &y) != 3
+	if( sscanf(w1, "%15[^,],%6hd,%6hd,%6hd,%39s", mapname, &x, &y, &facing, variable) < 3
 	||	sscanf(w4, "%6hd,%6hd,%15[^,],%6hd,%6hd", &xs, &ys, to_mapname, &to_x, &to_y) != 5 )
 	{
 		ShowError("npc_parse_warp: Invalid warp definition in file '%s', line '%d'.\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, strline(buffer,start-buffer), w1, w2, w3, w4);
@@ -2790,6 +2826,9 @@ static const char* npc_parse_warp(char* w1, char* w2, char* w3, char* w4, const 
 	else
 		nd->class_ = JT_GUILD_FLAG;
 	nd->speed = 200;
+
+	if (*variable)
+		storm_set_npcvar(nd, variable);
 
 	nd->u.warp.mapindex = i;
 	nd->u.warp.x = to_x;
@@ -2843,6 +2882,9 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 	unsigned short nameid = 0;
 	struct npc_data *nd;
 	enum npc_subtype type;
+	char variable[MAX_NPC_VARIABLE_NAME];
+
+	memset(variable, 0, sizeof(variable));
 
 	if( strcmp(w1,"-") == 0 )
 	{// 'floating' shop?
@@ -2852,8 +2894,12 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 	else
 	{// w1=<map name>,<x>,<y>,<facing>
 		char mapname[MAP_NAME_LENGTH_EXT];
-		if( sscanf(w1, "%15[^,],%6hd,%6hd,%4hd", mapname, &x, &y, &dir) != 4
-		||	strchr(w4, ',') == NULL )
+		if( sscanf(w1, "%15[^,],%6hd,%6hd,%4hd,%39s", mapname, &x, &y, &dir, variable) < 4
+#ifdef STORM_BAZAAR
+		||	(strchr(w4, ',') == NULL && strcasecmp(w2, "bazaarshop")) )
+#else
+		|| strchr(w4, ',') == NULL)
+#endif
 		{
 			ShowError("npc_parse_shop: Invalid shop definition in file '%s', line '%d'.\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, strline(buffer,start-buffer), w1, w2, w3, w4);
 			return strchr(start,'\n');// skip and continue
@@ -2868,16 +2914,27 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 		ShowWarning("npc_parse_shop: coordinates %d/%d are out of bounds in map %s(%dx%d), in file '%s', line '%d'\n", x, y, mapdata->name, mapdata->xs, mapdata->ys,filepath,strline(buffer,start-buffer));
 	}
 
-	if( !strcasecmp(w2,"cashshop") )
+	if (!strcasecmp(w2, "cashshop"))
 		type = NPCTYPE_CASHSHOP;
-	else if( !strcasecmp(w2,"itemshop") )
+	else if (!strcasecmp(w2, "itemshop"))
 		type = NPCTYPE_ITEMSHOP;
-	else if( !strcasecmp(w2,"pointshop") )
+	else if (!strcasecmp(w2, "pointshop"))
 		type = NPCTYPE_POINTSHOP;
-	else if( !strcasecmp(w2, "marketshop") )
+	else if (!strcasecmp(w2, "marketshop"))
 		type = NPCTYPE_MARKETSHOP;
+#ifdef STORM_BAZAAR
+	else if (!strcasecmp(w2, "bazaarshop"))
+		type = NPCTYPE_BAZAARSHOP;
+#endif
 	else
 		type = NPCTYPE_SHOP;
+
+#ifdef STORM_BAZAAR
+	if (!battle_config.storm_bazaar && type == NPCTYPE_BAZAARSHOP) {
+		ShowWarning("npc_parse_shop: A bazaar shop was found but the bazaar feature is not enabled, in file '%s', line '%d', skipping\n", filepath, strline(buffer, start - buffer));
+		return strchr(start, '\n');
+	}
+#endif
 
 	p = strchr(w4,',');
 	memset(point_str,'\0',sizeof(point_str));
@@ -2960,6 +3017,15 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 				}
 #endif
 				break;
+#ifdef STORM_BAZAAR
+			case NPCTYPE_BAZAARSHOP:
+				if (sscanf(p, ",%6hu", &nameid2) != 1) {
+					ShowError("npc_parse_shop: (BAZAARSHOP) Invalid bazaar item filter in file '%s, line '%d', skipping.\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, strline(buffer, start - buffer), w1, w2, w3, w4);
+					skip = true;
+				}
+				value = INT_MAX;
+				break;
+#endif
 			default:
 				if (sscanf(p, ",%6hu:%11d", &nameid2, &value) != 2) {
 					ShowError("npc_parse_shop: Invalid item definition in file '%s', line '%d'. Ignoring the rest of the line...\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, strline(buffer, start - buffer), w1, w2, w3, w4);
@@ -3023,7 +3089,12 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 		nd->u.shop.count++;
 		p = strchr(p+1,',');
 	}
+
+#ifdef STORM_BAZAAR
+	if (nd->u.shop.count == 0 && type != NPCTYPE_BAZAARSHOP) {
+#else
 	if( nd->u.shop.count == 0 ) {
+#endif
 		ShowWarning("npc_parse_shop: Ignoring empty shop in file '%s', line '%d'.\n", filepath, strline(buffer,start-buffer));
 		aFree(nd);
 		return strchr(start,'\n');// continue
@@ -3042,6 +3113,9 @@ static const char* npc_parse_shop(char* w1, char* w2, char* w3, char* w4, const 
 	npc_parsename(nd, w3, start, buffer, filepath);
 	nd->class_ = m == -1 ? JT_FAKENPC : npc_parseview(w4, start, buffer, filepath);
 	nd->speed = 200;
+
+	if (*variable)
+		storm_set_npcvar(nd, variable);
 
 	++npc_shop;
 	nd->bl.type = BL_NPC;
@@ -3090,6 +3164,15 @@ bool npc_shop_discount( struct npc_data* nd ){
 		default:
 			return nd->u.shop.discount;
 	}
+}
+
+bool npc_shop_discount2(enum npc_subtype type, bool discount) {
+	if (type == NPCTYPE_SHOP || (type != NPCTYPE_SHOP && discount))
+		return true;
+	if( (type == NPCTYPE_ITEMSHOP && battle_config.discount_item_point_shop&1) ||
+		(type == NPCTYPE_POINTSHOP && battle_config.discount_item_point_shop&2) )
+		return true;
+	return false;
 }
 
 /**
@@ -3222,6 +3305,9 @@ static const char* npc_parse_script(char* w1, char* w2, char* w3, char* w4, cons
 	struct npc_label_list* label_list;
 	int label_list_num;
 	struct npc_data* nd;
+	char variable[MAX_NPC_VARIABLE_NAME];
+
+	memset(variable, 0, sizeof(variable));
 
 	if( strcmp(w1, "-") == 0 )
 	{// floating npc
@@ -3233,7 +3319,7 @@ static const char* npc_parse_script(char* w1, char* w2, char* w3, char* w4, cons
 	{// npc in a map
 		char mapname[MAP_NAME_LENGTH_EXT];
 
-		if( sscanf(w1, "%15[^,],%6hd,%6hd,%4hd", mapname, &x, &y, &dir) != 4 )
+		if( sscanf(w1, "%15[^,],%6hd,%6hd,%4hd,%39s", mapname, &x, &y, &dir, variable) < 4 )
 		{
 			ShowError("npc_parse_script: Invalid placement format for a script in file '%s', line '%d'. Skipping the rest of file...\n * w1=%s\n * w2=%s\n * w3=%s\n * w4=%s\n", filepath, strline(buffer,start-buffer), w1, w2, w3, w4);
 			return NULL;// unknown format, don't continue
@@ -3287,6 +3373,9 @@ static const char* npc_parse_script(char* w1, char* w2, char* w3, char* w4, cons
 	++npc_script;
 	nd->bl.type = BL_NPC;
 	nd->subtype = NPCTYPE_SCRIPT;
+
+	if (*variable)
+		storm_set_npcvar(nd, variable);
 
 	if( m >= 0 )
 	{
@@ -4361,6 +4450,20 @@ static const char* npc_parse_mapflag(char* w1, char* w2, char* w3, char* w4, con
 			break;
 		}
 
+			// Stormbreaker
+#ifdef STORM_ITEM_DURABILITY
+		case MF_ITEM_DURABILITY: {
+			union u_mapflag_args args = {};
+
+			if (sscanf(w4, "%11d", &args.flag_val) == 0)
+				ShowError("npc_parse_mapflag: item_durability: The durability loss rate must be set. Skipping (file '%s', line '%d')\n", filepath, strline(buffer, start - buffer));
+			else
+				map_setmapflag_sub(m, MF_ITEM_DURABILITY, true, &args);
+
+			break;
+		}
+#endif
+		
 		// All others do not need special treatment
 		default:
 			map_setmapflag(m, mapflag, state);
@@ -4539,7 +4642,7 @@ int npc_parsesrcfile(const char* filepath, bool runOnInit)
 
 		if((strcasecmp(w2,"warp") == 0 || strcasecmp(w2,"warp2") == 0) && count > 3)
 			p = npc_parse_warp(w1,w2,w3,w4, p, buffer, filepath);
-		else if( (!strcasecmp(w2,"shop") || !strcasecmp(w2,"cashshop") || !strcasecmp(w2,"itemshop") || !strcasecmp(w2,"pointshop") || !strcasecmp(w2,"marketshop") ) && count > 3 )
+		else if( (!strcasecmp(w2,"shop") || !strcasecmp(w2,"cashshop") || !strcasecmp(w2,"itemshop") || !strcasecmp(w2,"pointshop") || !strcasecmp(w2,"marketshop") || !strcasecmp(w2, "bazaarshop") ) && count > 3 )
 			p = npc_parse_shop(w1,w2,w3,w4, p, buffer, filepath);
 		else if( strcasecmp(w2,"script") == 0 && count > 3 ) {
 			if( strcasecmp(w1,"function") == 0 )

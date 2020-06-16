@@ -473,6 +473,11 @@
 	export_constant(MF_PRIVATEAIRSHIP_DESTINATION);
 	export_constant(MF_SKILL_DURATION);
 
+	// Stormbreaker
+#ifdef STORM_ITEM_DURABILITY
+	export_constant(MF_ITEM_DURABILITY);
+#endif
+
 	/* setcell types */
 	export_constant(CELL_WALKABLE);
 	export_constant(CELL_SHOOTABLE);
@@ -752,6 +757,90 @@
 	export_constant2("bNoWalkDelay",SP_NO_WALK_DELAY);
 	export_constant2("bLongSPGainValue",SP_LONG_SP_GAIN_VALUE);
 	export_constant2("bLongHPGainValue",SP_LONG_HP_GAIN_VALUE);
+	
+	/* Bonus expansion pack */
+	export_constant2("bChangeRace", SP_CHANGERACE);
+	export_constant2("bAddHomIntimacy", SP_ADD_HOMINTIMACY);
+	export_constant2("bAddSkillMovement", SP_ADD_SKILLMOVE);
+	export_constant2("bAddEvadeTrap", SP_ADD_TRAPEVADE);
+	export_constant2("bNoAreaMagic", SP_MAGICAREA_DEF_RATE);
+	export_constant2("bNoSingleMagic", SP_MAGICSINGLE_DEF_RATE);
+	export_constant2("bAddEvadeCritical", SP_ADD_CRITICALEVADE);
+	export_constant2("bKeepBuffs", SP_KEEPBUFFS);
+	export_constant2("bIgnoreGTB", SP_ADD_IGNOREGTB);
+	export_constant2("bCriticalDodge", SP_ADD_CRITICALDODGE);
+	export_constant2("bAreaSkill", SP_ADD_AREASKILL);
+	export_constant2("bSkillGainSP", SP_SKILL_GAINSP);
+	export_constant2("bAddStatusDamage", SP_ADD_STATUSDAMAGE);
+	export_constant2("bAddStatusResist", SP_ADD_STATUSRESIST);
+	export_constant2("bAddStatusSwitch", SP_ADD_STATUSSWITCH);
+	export_constant2("bHealAttack", SP_HEALATTACK);
+	export_constant2("bMatkDefRatioAtkRace", SP_MDEF_RATIO_ATK_RACE);
+	export_constant2("bMatkDefRatioAtkEle", SP_MDEF_RATIO_ATK_ELE);
+	export_constant2("bHPAttackRatio", SP_HP_ATK_RATIO);
+	export_constant2("bSPAttackRatio", SP_SP_ATK_RATIO);
+	export_constant2("bAtkEmotion", SP_ATK_EMOTION);
+	export_constant2("bAddStatusRate", SP_ADD_STATUSRATE);
+	export_constant2("bIgnoreSkillDefEle", SP_IGNORE_SKILL_DEF_ELE);
+	export_constant2("bIgnoreSkillDefRace", SP_IGNORE_SKILL_DEF_RACE);
+	export_constant2("bSwitchPlace", SP_SWITCHPLACE);
+	export_constant2("bWideStatus", SP_WIDESTATUS);
+	export_constant2("bWideStatusOnHit", SP_WIDESTATUS_ONHIT);
+	export_constant2("bSkillChain", SP_SKILLCHAIN);
+	export_constant2("bSkillBounce", SP_SKILLBOUNCE);
+	export_constant2("bSubJob", SP_SUBJOB);
+	export_constant2("bAddJob", SP_ADDJOB);
+	export_constant2("bAddMonsterDropItemAtk", SP_ADD_MONSTERDROPITEMATK);
+	export_constant2("bAddMonsterDropItemGroupAtk", SP_ADD_MONSTERDROPITEMGROUPATK);
+	export_constant2("bAddRaceDropItemAtk", SP_ADD_RACEDROPITEMATK);
+	export_constant2("bAddClassDropItemAtk", SP_ADD_CLASSDROPITEMATK);
+	export_constant2("bSelfDropItemAtk", SP_ADD_SELFDROPITEMATK);
+	export_constant2("bSelfDropItemGroupAtk", SP_ADD_SELFDROPITEMGROUPATK);
+	export_constant2("bAddStatus", SP_ADD_STATUS);
+	export_constant2("bAddPetIntimacy", SP_ADD_PETINTIMACY);
+	export_constant2("bInterrupt", SP_INTERRUPT);
+	export_constant2("bInvert", SP_INVERT);
+	export_constant2("bBreakEquip", SP_BREAK_EQUIP);
+	export_constant2("bChangeSize", SP_CHANGESIZE);
+	export_constant2("bMultiDrop", SP_MULTIDROP);
+	export_constant2("bDoubleCast", SP_DOUBLECAST);
+	export_constant2("bIgnoreFlee", SP_IGNOREFLEE);
+	export_constant2("bDeath", SP_DEATH);
+	export_constant2("bWaterAtkRate", SP_WATERATKRATE);
+	export_constant2("bWaterMatkRate", SP_WATERMATKRATE);
+	export_constant2("bGravity", SP_GRAVITY);
+	export_constant2("bNoChat", SP_NOCHAT);
+	export_constant2("bNoConsume", SP_NOCONSUME);
+	export_constant2("bNoAmmo", SP_NOAMMO);
+	export_constant2("bSnapMove", SP_SNAPMOVE);
+	export_constant2("bZenyAttack", SP_ZENYATTACK);
+	export_constant2("bItemAttack", SP_ITEMATTACK);
+	export_constant2("bAutoLife", SP_AUTOLIFE);
+	export_constant2("bDamageLimit", SP_DAMAGELIMIT);
+	export_constant2("bHPLimit", SP_HPLIMIT);
+	export_constant2("bSPLimit", SP_SPLIMIT);
+	export_constant2("bAtkRateChance", SP_ATKRATECHANCE);
+	export_constant2("bMatkRateChance", SP_MATKRATECHANCE);
+	export_constant2("bNoEquip", SP_NOEQUIP);
+	export_constant2("bWeaponDefRate", SP_WEAPONDEF);
+	export_constant2("bElementLv", SP_ELEMENTLV);
+	export_constant2("bSkillHPCost", SP_SKILLHPCOST);
+	export_constant2("bSkillItemCost", SP_SKILLITEMCOST);
+	export_constant2("bDurabilityDef", SP_DURABILITYDEF);
+
+	// Stormbreaker
+	export_constant2("bAutoHPUse", SP_AUTOHPUSE);
+	export_constant2("bAutoSPUse", SP_AUTOSPUSE);
+	export_constant2("bAutoStatusUse", SP_AUTOSTATUSUSE);
+	export_constant2("bNoItemUse", SP_NOITEMUSE);
+	export_constant2("bNoSkillUse", SP_NOSKILLUSE);
+	export_constant2("bNoWalk", SP_NOWALK);
+	export_constant2("bUndetectable", SP_UNDETECTABLE);
+	export_constant2("bSkillRequireCost", SP_SKILLREQUIRECOST);
+	export_constant2("bItemHPToSP", SP_ITEMHPTOSP);
+	export_constant2("bItemSPToHP", SP_ITEMSPTOHP);
+	export_constant2("bCastZenyCost", SP_ZENYCOST);
+	export_constant2("bCastHPCost", SP_HPCOST);
 
 	/* equip indices */
 	export_constant(EQI_COMPOUND_ON);
@@ -5033,8 +5122,8 @@
 	export_constant(REFINE_COST_MAX);
 
 	/* refine information types */
-	script_set_constant("REFINE_MATERIAL_ID", 0, false, false);
-	script_set_constant("REFINE_ZENY_COST", 1, false, false);
+	export_constant(REFINE_MATERIAL_ID);
+	export_constant(REFINE_ZENY_COST);
 
 	/* NPC view ids */
 	// Special macro to strip the prefix 'JT_'
@@ -7744,6 +7833,12 @@
 	export_constant(BG_INFO_MAX_LEVEL);
 	export_constant(BG_INFO_MAPS);
 	export_constant(BG_INFO_DESERTER_TIME);
+
+	// Stormbreaker
+#ifdef STORM_ITEM_STATUS
+	export_constant(IPF_NONE);
+	export_constant(IPF_EQUIP);
+#endif
 
 	#undef export_constant
 	#undef export_constant2

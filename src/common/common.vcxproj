@@ -38,6 +38,7 @@
     <ClInclude Include="showmsg.hpp" />
     <ClInclude Include="socket.hpp" />
     <ClInclude Include="sql.hpp" />
+    <ClInclude Include="stormbreaker.hpp" />
     <ClInclude Include="strlib.hpp" />
     <ClInclude Include="timer.hpp" />
     <ClInclude Include="utils.hpp" />

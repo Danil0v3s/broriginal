@@ -812,7 +812,7 @@ void hom_menu(struct map_session_data *sd, int type)
 */
 int hom_food(struct map_session_data *sd, struct homun_data *hd)
 {
-	int i, foodID, emotion;
+	int i, foodID, emotion, increase = 0;
 
 	nullpo_retr(1,sd);
 	nullpo_retr(1,hd);
@@ -835,14 +835,29 @@ int hom_food(struct map_session_data *sd, struct homun_data *hd)
 		hom_decrease_intimacy(hd, 5);
 		emotion = ET_PROFUSELY_SWEAT;
 	} else if ( hd->homunculus.hunger >= 26 ) {
-		hom_increase_intimacy(hd, 75);
+		increase = 75;
 		emotion = ET_DELIGHT;
 	} else if ( hd->homunculus.hunger >= 11 ) {
-		hom_increase_intimacy(hd, 100);
+		increase = 100;
 		emotion = ET_DELIGHT;
 	} else {
-		hom_increase_intimacy(hd, 50);
+		increase = 50;
 		emotion = ET_DELIGHT;
+	}
+
+	// Stormbreaker
+	if (increase > 0)
+	{
+		if (sd->bonus.homintimacy != 0)
+			increase += increase * sd->bonus.homintimacy / 100;
+
+		if (increase > 0)
+			hom_increase_intimacy(hd, increase);
+		else if (increase < 0) {
+			increase = abs(increase);
+			hom_decrease_intimacy(hd, abs(increase));
+			emotion = increase < 50 ? ET_PROFUSELY_SWEAT : ET_KEK;
+		}
 	}
 
 	hd->homunculus.hunger += 10;	//dunno increase value for each food

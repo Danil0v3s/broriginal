@@ -233,10 +233,13 @@ unsigned short itemdb_searchrandomid(uint16 group_id, uint8 sub_group) {
 static void itemdb_pc_get_itemgroup_sub(struct map_session_data *sd, bool identify, struct s_item_group_entry *data) {
 	uint16 i, get_amt = 0;
 	struct item tmp;
+	struct item_data* it;
 
 	nullpo_retv(data);
 
 	memset(&tmp, 0, sizeof(tmp));
+
+	it = itemdb_search(data->nameid);
 
 	tmp.nameid = data->nameid;
 	tmp.bound = data->bound;
@@ -248,6 +251,7 @@ static void itemdb_pc_get_itemgroup_sub(struct map_session_data *sd, bool identi
 		tmp.card[2] = GetWord(sd->status.char_id, 0);
 		tmp.card[3] = GetWord(sd->status.char_id, 1);
 	}
+	STORM_DURABILITY(it, tmp);
 
 	if (!itemdb_isstackable(data->nameid))
 		get_amt = 1;
@@ -358,7 +362,7 @@ const char* itemdb_typename(enum item_types type)
  * @param jobmask: Job Mask to convert
  * @author: Skotlex
  */
-static void itemdb_jobid2mapid(uint64 *bclass, uint64 jobmask)
+void itemdb_jobid2mapid(uint64 *bclass, uint64 jobmask)
 {
 	int i;
 
@@ -2013,6 +2017,15 @@ void itemdb_reload(void) {
 	itemdb_read();
 	cashshop_reloaddb();
 
+#ifdef STORM_ITEM_STATUS
+	storm_itempassive_reload();
+#endif
+	storm_craft_reload();
+	storm_enchant_reload();
+#ifdef STORM_BAZAAR
+	storm_bazaar_reload();
+#endif
+
 	if (battle_config.feature_roulette)
 		itemdb_parse_roulette_db();
 
@@ -2069,4 +2082,13 @@ void do_init_itemdb(void) {
 
 	if (battle_config.feature_roulette)
 		itemdb_parse_roulette_db();
+
+#ifdef STORM_ITEM_STATUS
+	storm_itempassive_read();
+#endif
+	storm_craft_read();
+	storm_enchant_read();
+#ifdef STORM_BAZAAR
+	storm_bazaar_read();
+#endif
 }

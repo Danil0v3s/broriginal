@@ -36,6 +36,7 @@
 #include "pc_groups.hpp"
 #include "pet.hpp"
 #include "script.hpp"
+#include "stormbreaker.hpp"
 
 using namespace rathena;
 
@@ -3751,6 +3752,10 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 		+ sizeof(sd->ignore_mdef_by_race2)
 		+ sizeof(sd->dropaddrace)
 		+ sizeof(sd->dropaddclass)
+		+ sizeof(sd->breakequip)
+		+ sizeof(sd->noequip)
+		+ sizeof(sd->weapondef)
+		+ sizeof(sd->durabilitydef)
 		);
 
 	memset (&sd->right_weapon.overrefine, 0, sizeof(sd->right_weapon) - sizeof(sd->right_weapon.atkmods));
@@ -3825,6 +3830,43 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 	sd->sp_vanish.clear();
 	sd->hp_vanish.clear();
 
+	// <Epoque>
+	sd->criticaldodge.clear();
+	sd->areaskill.clear();
+	sd->skillgainsp.clear();
+	sd->statusdamage.clear();
+	sd->statusresist.clear();
+	sd->statusswitch.clear();
+	sd->attackemotion.clear();
+	sd->statusrate.clear();
+	sd->ignoredefele.clear();
+	sd->ignoredefrace.clear();
+	sd->areastatus.clear();
+	sd->areastatusonhit.clear();
+	sd->skillchain.clear();
+	sd->skillbounce.clear();
+	sd->subjob.clear();
+	sd->addjob.clear();
+	sd->mobdropitem.clear();
+	sd->mobdropitemgroup.clear();
+	sd->mobracedropitem.clear();
+	sd->mobclassdropitem.clear();
+	sd->selfdropitem.clear();
+	sd->selfdropitemgroup.clear();
+	sd->statusinflict.clear();
+	sd->multidrop.clear();
+	sd->doublecast.clear();
+	sd->gravity.clear();
+	sd->itemattack.clear();
+	sd->atkratechance.clear();
+	sd->matkratechance.clear();
+	sd->skillhpcost.clear();
+	sd->skillitemcost.clear();
+	sd->autohpuse.clear();
+	sd->autospuse.clear();
+	sd->autostatususe.clear();
+	sd->skillrequirementcost.clear();
+
 	// Zero up structures...
 	memset(&sd->hp_loss, 0, sizeof(sd->hp_loss)
 		+ sizeof(sd->sp_loss)
@@ -3846,6 +3888,9 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 	pc_delautobonus(sd, sd->autobonus2, true);
 	pc_delautobonus(sd, sd->autobonus3, true);
 
+	// Status bonus
+	storm_statusbonus_clear(sd);
+
 	running_npc_stat_calc_event = true;
 	npc_script_event(sd, NPCE_STATCALC);
 	running_npc_stat_calc_event = false;
@@ -3863,6 +3908,12 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 		if (!sd->inventory_data[index])
 			continue;
 
+#ifdef STORM_ITEM_DURABILITY
+		if (battle_config.storm_item_armor_weaken) {
+			unsigned int penalty = sd->inventory.u.items_inventory[index].durability / 10000;
+			base_status->def += (sd->inventory_data[index]->def * penalty * battle_config.storm_item_armor_weaken) / 10000;
+		} else
+#endif
 		base_status->def += sd->inventory_data[index]->def;
 
 		// Items may be equipped, their effects however are nullified.
@@ -3876,6 +3927,11 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 		// Sanitize the refine level in case someone decreased the value inbetween
 		if (sd->inventory.u.items_inventory[index].refine > MAX_REFINE)
 			sd->inventory.u.items_inventory[index].refine = MAX_REFINE;
+
+#ifdef STORM_ITEM_SCRIPT
+		if (sd->inventory_data[index]->passive_script)
+			storm_itempassive(sd, sd->inventory_data[index]->nameid, ICF_ITEM_EQUIP);
+#endif
 
 		if (sd->inventory_data[index]->type == IT_WEAPON) {
 			int r = sd->inventory.u.items_inventory[index].refine, wlv = sd->inventory_data[index]->wlv;
@@ -3891,10 +3947,25 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 				wd = &sd->right_weapon;
 				wa = &base_status->rhw;
 			}
+
+#ifdef STORM_ITEM_DURABILITY
+			if (battle_config.storm_item_weapon_weaken) {
+				unsigned int penalty = sd->inventory.u.items_inventory[index].durability / 10000;
+				wa->atk += (sd->inventory_data[index]->atk * penalty * battle_config.storm_item_weapon_weaken) / 10000;
+			} else
+#endif
 			wa->atk += sd->inventory_data[index]->atk;
+
 			if(r)
 				wa->atk2 = refine_info[wlv].bonus[r-1] / 100;
 #ifdef RENEWAL
+#ifdef STORM_ITEM_DURABILITY
+			if (battle_config.storm_item_weapon_weaken) {
+				unsigned int penalty = sd->inventory.u.items_inventory[index].durability / 10000;
+				wa->matk += (sd->inventory_data[index]->matk * penalty * battle_config.storm_item_weapon_weaken) / 10000;
+			}
+			else
+#endif
 			wa->matk += sd->inventory_data[index]->matk;
 			wa->wlv = wlv;
 			if(r && sd->weapontype1 != W_BOW) // Renewal magic attack refine bonus
@@ -4028,6 +4099,12 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 					if (!calculating)
 						return 1;
 				}
+
+#ifdef STORM_ITEM_SCRIPT
+				if (data->passive_script)
+					storm_itempassive(sd, data->nameid, ICF_ITEM_EQUIP);
+#endif
+
 				if(!data->script)
 					continue;
 				if(!pc_has_permission(sd,PC_PERM_USE_ALL_EQUIPMENT) && itemdb_isNoEquip(data,sd->bl.m)) // Card restriction checks.
@@ -4093,6 +4170,27 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 	}
 
 	pc_bonus_script(sd);
+
+	// Status bonus
+	if (sc->count && !sd->statusbonus.empty())
+	{
+		for (auto& it : sd->statusbonus)
+		{
+			if (!sc->data[it.type])
+				continue;
+
+			storm_statusbonus_run_script(sd, it.entries);
+		}
+	}
+
+#ifdef STORM_ITEM_SCRIPT
+	for (i = 0; i < MAX_INVENTORY; i++) {
+		struct item_data* data;
+		if ((data = sd->inventory_data[i]) && data->passive_script)
+			storm_itempassive(sd, data->nameid, ICF_STATUS_CALC);
+	}
+
+#endif
 
 	if( sd->pd ) { // Pet Bonus
 		struct pet_data *pd = sd->pd;
@@ -4218,6 +4316,10 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 	if(battle_config.hp_rate != 100)
 		base_status->max_hp = (unsigned int)(battle_config.hp_rate * (base_status->max_hp/100.));
 
+	// <Epoque>
+	if (sd->bonus.hplimit)
+		base_status->max_hp = umin(base_status->max_hp, sd->bonus.hplimit);
+
 	if (sd->status.base_level < 100)
 		base_status->max_hp = cap_value(base_status->max_hp,1,(unsigned int)battle_config.max_hp_lv99);
 	else if (sd->status.base_level < 151)
@@ -4230,6 +4332,10 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
 
 	if(battle_config.sp_rate != 100)
 		base_status->max_sp = (unsigned int)(battle_config.sp_rate * (base_status->max_sp/100.));
+
+	// <Epoque>
+	if (sd->bonus.splimit)
+		base_status->max_sp = umin(base_status->max_sp, sd->bonus.splimit);
 
 	base_status->max_sp = cap_value(base_status->max_sp,1,(unsigned int)battle_config.max_sp);
 
@@ -5445,6 +5551,10 @@ void status_calc_bl_main(struct block_list *bl, /*enum scb_flag*/int flag)
 			if(battle_config.hp_rate != 100)
 				status->max_hp = (unsigned int)(battle_config.hp_rate * (status->max_hp/100.));
 
+			// <Epoque>
+			if (sd->bonus.hplimit)
+				status->max_hp = umin(status->max_hp, sd->bonus.hplimit);
+
 			if (sd->status.base_level < 100)
 				status->max_hp = umin(status->max_hp,(unsigned int)battle_config.max_hp_lv99);
 			else if (sd->status.base_level < 151)
@@ -5467,6 +5577,10 @@ void status_calc_bl_main(struct block_list *bl, /*enum scb_flag*/int flag)
 
 			if(battle_config.sp_rate != 100)
 				status->max_sp = (unsigned int)(battle_config.sp_rate * (status->max_sp/100.));
+
+			// <Epoque>
+			if (sd->bonus.splimit)
+				status->max_sp = umin(status->max_hp, sd->bonus.splimit);
 
 			status->max_sp = umin(status->max_sp,(unsigned int)battle_config.max_sp);
 		}
@@ -7154,6 +7268,7 @@ static unsigned short status_calc_speed(struct block_list *bl, struct status_cha
 {
 	TBL_PC* sd = BL_CAST(BL_PC, bl);
 	int speed_rate = 100;
+	int free_cast = 0;
 
 	if (sc == NULL || (sd && sd->state.permanent_speed))
 		return (unsigned short)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
@@ -7172,11 +7287,16 @@ static unsigned short status_calc_speed(struct block_list *bl, struct status_cha
 		return (unsigned short)cap_value(speed, MIN_WALK_SPEED, MAX_WALK_SPEED);
 	}
 
-	if( sd && sd->ud.skilltimer != INVALID_TIMER && (pc_checkskill(sd,SA_FREECAST) > 0 || sd->ud.skill_id == LG_EXEEDBREAK) ) {
-		if( sd->ud.skill_id == LG_EXEEDBREAK )
+	if (sd)
+		free_cast = pc_checkskill(sd, SA_FREECAST);
+
+	if( sd && sd->ud.skilltimer != INVALID_TIMER && (free_cast > 0 || sd->bonus.skillmove > 0 || sd->ud.skill_id == LG_EXEEDBREAK) ) {
+		if (sd->ud.skill_id == LG_EXEEDBREAK)
 			speed_rate = 160 - 10 * sd->ud.skill_lv;
+		else if (free_cast > 0)
+			speed_rate = 175 - 5 * free_cast;
 		else
-			speed_rate = 175 - 5 * pc_checkskill(sd,SA_FREECAST);
+			speed_rate = 200 - sd->bonus.skillmove;
 	} else {
 		int val = 0;
 
@@ -8199,15 +8319,26 @@ int status_isdead(struct block_list *bl)
  * @param bl: Object to check [PC|MOB|HOM|MER|ELEM]
  * @return value of magic damage to be blocked
  */
-int status_isimmune(struct block_list *bl)
+int status_isimmune(struct block_list* src, struct block_list *bl)
 {
+	struct map_session_data* sd;
+	struct map_session_data* tsd;
 	struct status_change *sc =status_get_sc(bl);
+
 	if (sc && sc->data[SC_HERMODE])
 		return 100;
 
-	if (bl->type == BL_PC &&
-		((TBL_PC*)bl)->special_state.no_magic_damage >= battle_config.gtb_sc_immunity)
+	sd = BL_CAST(BL_PC, src);
+	tsd = BL_CAST(BL_PC, bl);
+
+	if (tsd && tsd->special_state.no_magic_damage >= battle_config.gtb_sc_immunity)
+	{
+		if (sd && sd->bonus.ignoregtb.value2 > rand() % 100)
+			return 100 - sd->bonus.ignoregtb.value1;
+
 		return ((TBL_PC*)bl)->special_state.no_magic_damage;
+	}
+
 	return 0;
 }
 
@@ -8484,7 +8615,7 @@ t_tick status_get_sc_def(struct block_list *src, struct block_list *bl, enum sc_
 		return tick?tick:1; // This should not happen in current implementation, but leave it anyway
 
 	// Status that are blocked by Golden Thief Bug card or Wand of Hermod
-	if (status_isimmune(bl)) {
+	if (status_isimmune(src, bl)) {
 		switch (type) {
 			case SC_DECREASEAGI:
 			case SC_SILENCE:
@@ -8524,6 +8655,12 @@ t_tick status_get_sc_def(struct block_list *src, struct block_list *bl, enum sc_
 	sc = status_get_sc(bl);
 	if( sc && !sc->count )
 		sc = NULL;
+
+	// Stormbreaker, apply status resist prior to other calculations
+	if (sd && !sd->statusresist.empty())
+		for (const auto& it : sd->statusresist)
+			if (it.value1 == type && it.value2 > rand() % 100)
+				return 0;
 
 	switch (type) {
 		case SC_POISON:
@@ -8697,7 +8834,7 @@ t_tick status_get_sc_def(struct block_list *src, struct block_list *bl, enum sc_
 				return 0;
 			return tick ? tick : 1;
 	}
-
+	
 	if (sd) {
 		if (battle_config.pc_sc_def_rate != 100) {
 			sc_def = sc_def*battle_config.pc_sc_def_rate/100;
@@ -8764,6 +8901,22 @@ t_tick status_get_sc_def(struct block_list *src, struct block_list *bl, enum sc_
 			}
 			if (sd->sc.data[SC_COMMONSC_RESIST] && SC_COMMON_MIN <= type && type <= SC_COMMON_MAX)
 				rate -= rate*sd->sc.data[SC_COMMONSC_RESIST]->val1/100;
+		}
+
+		// Stormbreaker
+		if (src && src->type == BL_PC) {
+			struct map_session_data* ssd = (struct map_session_data*)src;
+			int change = 0;
+
+			if (ssd->bonus.statusrate != 0)
+				change += ssd->bonus.statusrate;
+
+			for (const auto& it : ssd->statusrate) {
+				if (it.value1 == type)
+					change += it.value2;
+			}
+
+			rate += (rate * change) / 100;
 		}
 
 		// Aegis accuracy
@@ -8957,7 +9110,11 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 	struct view_data *vd;
 	int opt_flag, calc_flag, undead_flag, val_flag = 0, tick_time = 0;
 	bool sc_isnew = true;
-
+	bool sc_ispassive = false;
+#ifdef STORM_ITEM_STATUS
+	sc_ispassive = (flag & SCSTART_PASSIVE);
+#endif
+	
 	nullpo_ret(bl);
 	sc = status_get_sc(bl);
 	status = status_get_status_data(bl);
@@ -8970,10 +9127,10 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 	if( !sc )
 		return 0; // Unable to receive status changes
 
-	if( bl->type != BL_NPC && status_isdead(bl) && ( type != SC_NOCHAT && type != SC_JAILED ) ) // SC_NOCHAT and SC_JAILED should work even on dead characters
+	if( bl->type != BL_NPC && status_isdead(bl) && ( type != SC_NOCHAT && type != SC_JAILED && !sc_ispassive ) ) // SC_NOCHAT and SC_JAILED should work even on dead characters
 		return 0;
 
-	if (status_change_isDisabledOnMap(type, map_getmapdata(bl->m)))
+	if (status_change_isDisabledOnMap(type, map_getmapdata(bl->m)) && !sc_ispassive)
 		return 0;
 
 	if (sc->data[SC_GRAVITYCONTROL])
@@ -8983,10 +9140,34 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 //	if (bl->type == BL_MOB)
 //		if (status_get_race2(bl) == RC2_GVG && status_sc2scb_flag(type)&SCB_MAXHP) return 0;
 
-	if( sc->data[SC_REFRESH] ) {
-		if( type >= SC_COMMON_MIN && type <= SC_COMMON_MAX) // Confirmed.
-			return 0; // Immune to status ailments
-		switch( type ) {
+#ifdef STORM_ITEM_STATUS
+	if (sc_ispassive && (sce = sc->data[type]))
+	{
+		sce->passive = true;
+		return 0;
+	}
+#endif
+
+	sd = BL_CAST(BL_PC, bl);
+
+	if (!sc_ispassive)
+	{
+		if (sd && !sd->statusswitch.empty()) {
+			for (const auto& it : sd->statusswitch) {
+				if (it.value1 == type && it.value3 > rand() % 100) {
+					type = (sc_type)it.value2;
+					break;
+				}
+			}
+
+			if (type == SC_NONE)
+				return 0;
+		}
+
+		if (sc->data[SC_REFRESH]) {
+			if (type >= SC_COMMON_MIN && type <= SC_COMMON_MAX) // Confirmed.
+				return 0; // Immune to status ailments
+			switch (type) {
 			case SC_DEEPSLEEP:
 			case SC_BURNING:
 			case SC_FREEZING:
@@ -9001,12 +9182,12 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 			case SC_MARSHOFABYSS:
 			case SC_MANDRAGORA:
 				return 0;
+			}
 		}
-	}
-	if( sc->data[SC_INSPIRATION] ) {
-		if( type >= SC_COMMON_MIN && type <= SC_COMMON_MAX )
-			return 0; // Immune to status ailments
-		switch( type ) {
+		if (sc->data[SC_INSPIRATION]) {
+			if (type >= SC_COMMON_MIN && type <= SC_COMMON_MAX)
+				return 0; // Immune to status ailments
+			switch (type) {
 			case SC_BURNING:
 			case SC_FREEZING:
 			case SC_CRYSTALIZE:
@@ -9029,12 +9210,12 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 			case SC__UNLUCKY:
 			case SC__WEAKNESS:
 				return 0;
+			}
 		}
-	}
-	if( sc->data[SC_KINGS_GRACE] ) {
-		if( type >= SC_COMMON_MIN && type <= SC_COMMON_MAX )
-			return 0; // Immune to status ailments
-		switch( type ) {
+		if (sc->data[SC_KINGS_GRACE]) {
+			if (type >= SC_COMMON_MIN && type <= SC_COMMON_MAX)
+				return 0; // Immune to status ailments
+			switch (type) {
 			case SC_HALLUCINATION:
 			case SC_BURNING:
 			case SC_CRYSTALIZE:
@@ -9043,6 +9224,7 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 			case SC_FEAR:
 			case SC_MANDRAGORA:
 				return 0;
+			}
 		}
 	}
 
@@ -9055,11 +9237,11 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 
 	int tick = (int)duration;
 
-	sd = BL_CAST(BL_PC, bl);
 	vd = status_get_viewdata(bl);
 
 	undead_flag = battle_check_undead(status->race,status->def_ele);
 	// Check for immunities / sc fails
+	if (!sc_ispassive)
 	switch (type) {
 	case SC_DECREASEAGI:
 	case SC_QUAGMIRE:
@@ -12428,11 +12610,27 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 	sce->val2 = val2;
 	sce->val3 = val3;
 	sce->val4 = val4;
+
+#ifdef STORM_ITEM_STATUS
+	sce->passive = sc_ispassive;
+#endif
+
 	if (tick >= 0)
 		sce->timer = add_timer(gettick() + tick, status_change_timer, bl->id, type);
 	else
 		sce->timer = INVALID_TIMER; // Infinite duration
 
+	// Status bonus
+	if (sc_isnew && sd && !sd->statusbonus.empty())
+	{
+		for (const auto& it : sd->statusbonus)
+		{
+			if (it.type == type) {
+				calc_flag |= SCB_BASE;
+				break;
+			}
+		}
+	}
 	if (calc_flag) {
 		if (sd) {
 			switch(type) {
@@ -12455,6 +12653,18 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 
 	if (sd && sd->pd)
 		pet_sc_check(sd, type); // Skotlex: Pet Status Effect Healing
+
+	if(sd) {
+		if (!sc_ispassive && !sd->autostatususe.empty()) {
+			int i;
+			for (const auto& it : sd->autostatususe) {
+				if (it.value2 == type && it.value3 > rand() % 1000 && (i = pc_search_inventory(sd, it.value1)) != -1) {
+					pc_useitem(sd, i);
+					break;
+				}
+			}
+		}
+	}
 
 	// 1st thing to execute when loading status
 	switch (type) {
@@ -12557,12 +12767,15 @@ int status_change_start(struct block_list* src, struct block_list* bl,enum sc_ty
 int status_change_clear(struct block_list* bl, int type)
 {
 	struct status_change* sc;
+	struct map_session_data* sd;
 	int i;
 
 	sc = status_get_sc(bl);
 
 	if (!sc)
 		return 0;
+
+	sd = BL_CAST(BL_PC, bl);
 
 	// Cleaning all extras vars
 	sc->comet_x = 0;
@@ -12578,6 +12791,11 @@ int status_change_clear(struct block_list* bl, int type)
 	for(i = 0; i < SC_MAX; i++) {
 		if(!sc->data[i])
 			continue;
+
+#ifdef STORM_ITEM_STATUS
+		if (sc->data[i]->passive)
+			continue;
+#endif
 
 		if(type == 0) {
 			switch (i) { // Type 0: PC killed -> Place here statuses that do not dispel on death.
@@ -12699,6 +12917,51 @@ int status_change_clear(struct block_list* bl, int type)
 			case SC_JUMPINGCLAN:
 			case SC_DAILYSENDMAILCNT:
 				continue;
+			// Stormbreaker
+			default:
+				if (sd && sd->special_state.keep_buffs)
+					switch (i) {
+					case SC_CP_WEAPON:
+					case SC_CP_SHIELD:
+					case SC_CP_ARMOR:
+					case SC_CP_HELM:
+					case SC_DEEPSLEEP:
+					case SC_BURNING:
+					case SC_FREEZING:
+					case SC_CRYSTALIZE:
+					case SC_TOXIN:
+					case SC_PARALYSE:
+					case SC_VENOMBLEED:
+					case SC_MAGICMUSHROOM:
+					case SC_DEATHHURT:
+					case SC_PYREXIA:
+					case SC_OBLIVIONCURSE:
+					case SC_LEECHESEND:
+					case SC_MARSHOFABYSS:
+					case SC_MANDRAGORA:
+					case SC_HALLUCINATION:
+					case SC_QUAGMIRE:
+					case SC_SIGNUMCRUCIS:
+					case SC_DECREASEAGI:
+					case SC_SLOWDOWN:
+					case SC_MINDBREAKER:
+					case SC_WINKCHARM:
+					case SC_STOP:
+					case SC_ORCISH:
+					case SC_STRIPWEAPON:
+					case SC_STRIPSHIELD:
+					case SC_STRIPARMOR:
+					case SC_STRIPHELM:
+					case SC_BITE:
+					case SC_ADORAMUS:
+					case SC_VACUUM_EXTREME:
+					case SC_FEAR:
+					case SC_MAGNETICFIELD:
+					case SC_NETHERWORLD:
+						break;
+					default:
+						continue;
+					}
 			}
 		}
 
@@ -12768,7 +13031,11 @@ int status_change_clear(struct block_list* bl, int type)
  * @param line: Used for dancing save
  * @return 1: Success 0: Fail
  */
+#ifdef STORM_ITEM_STATUS
+int status_change_end_(struct block_list* bl, enum sc_type type, int tid, bool passive, const char* file, int line)
+#else
 int status_change_end_(struct block_list* bl, enum sc_type type, int tid, const char* file, int line)
+#endif
 {
 	struct map_session_data *sd;
 	struct status_change *sc;
@@ -12785,6 +13052,11 @@ int status_change_end_(struct block_list* bl, enum sc_type type, int tid, const 
 
 	if(type < 0 || type >= SC_MAX || !sc || !(sce = sc->data[type]))
 		return 0;
+
+#ifdef STORM_ITEM_STATUS
+	if (sce->passive && !passive)
+		return 0;
+#endif
 
 	sd = BL_CAST(BL_PC,bl);
 
@@ -13572,6 +13844,20 @@ int status_change_end_(struct block_list* bl, enum sc_type type, int tid, const 
 			clif_changelook(bl,LOOK_BODY2,cap_value(sd->status.body,0,battle_config.max_body_style));
 		}
 	}
+
+	// Status bonus
+	if (!(calc_flag & SCB_BASE) && sd && !sd->statusbonus.empty())
+	{
+		for (const auto& it : sd->statusbonus)
+		{
+			if (it.type == type) {
+				status_calc_pc(sd, SCO_FORCE);
+				calc_flag = SCB_NONE;
+				break;
+			}
+		}
+	}
+
 	if (calc_flag) {
 		switch (type) {
 		case SC_MAGICPOWER:
@@ -14706,6 +14992,11 @@ void status_change_clear_buffs(struct block_list* bl, uint8 type)
 		if(!sc->data[i])
 			continue;
 
+#ifdef STORM_ITEM_STATUS
+		if (sc->data[i]->passive)
+			continue;
+#endif
+
 		switch (i) {
 			// Stuff that cannot be removed
 			case SC_WEIGHT50:
@@ -15232,12 +15523,15 @@ static TIMER_FUNC(status_natural_heal_timer){
  */
 int status_get_refine_chance(enum refine_type wlv, int refine, bool enriched)
 {
+	e_refine_chance_type type;
+
 	if ( refine < 0 || refine >= MAX_REFINE)
 		return 0;
 	
-	int type = enriched ? 1 : 0;
 	if (battle_config.event_refine_chance)
-		type |= 2;
+		type = enriched ? REFINE_CHANCE_EVENT_ENRICHED : REFINE_CHANCE_EVENT_NORMAL;
+	else
+		type = enriched ? REFINE_CHANCE_ENRICHED : REFINE_CHANCE_NORMAL;
 
 	return refine_info[wlv].chance[type][refine];
 }
@@ -15292,6 +15586,11 @@ void status_change_clear_onChangeMap(struct block_list *bl, struct status_change
 		for (i = 0; i < SC_MAX; i++) {
 			if (!sc->data[i] || !SCDisabled[i])
 				continue;
+
+#ifdef STORM_ITEM_STATUS
+			if (sc->data[i]->passive)
+				continue;
+#endif
 
 			if (status_change_isDisabledOnMap_((sc_type)i, mapIsVS, mapIsPVP, mapIsGVG, mapIsBG, mapdata->zone, mapIsTE))
 				status_change_end(bl, (sc_type)i, INVALID_TIMER);
@@ -15372,6 +15671,11 @@ static bool status_yaml_readdb_refine_sub(const YAML::Node &node, int refine_inf
 
 		refine_info[refine_info_index].cost[idx].nameid = material;
 		refine_info[refine_info_index].cost[idx].zeny = price;
+
+		if (type["Downgrade"].IsDefined())
+			refine_info[refine_info_index].cost[idx].downgrade = type["Downgrade"].as<bool>();
+		else
+			refine_info[refine_info_index].cost[idx].downgrade = false;
 	}
 
 	const YAML::Node &rates = node["Rates"];
@@ -15435,11 +15739,21 @@ static void status_yaml_readdb_refine(const std::string &directory, const std::s
  * Returns refine cost (zeny or item) for a weapon level.
  * @param weapon_lv Weapon level
  * @param type Refine type (can be retrieved from refine_cost_type enum)
- * @param what true = returns zeny, false = returns item id
+ * @param what the refine information type
  * @return Refine cost for a weapon level
  */
-int status_get_refine_cost(int weapon_lv, int type, bool what) {
-	return what ? refine_info[weapon_lv].cost[type].zeny : refine_info[weapon_lv].cost[type].nameid;
+int status_get_refine_cost(int weapon_lv, int type, refineinfo what) {
+	refine_cost* cost = &refine_info[weapon_lv].cost[type];
+	switch (what) {
+		case REFINE_MATERIAL_ID:
+			return cost->nameid;
+		case REFINE_ZENY_COST:
+			return cost->zeny;
+		case REFINE_DOWNGRADE:
+			return cost->downgrade;
+		default:
+			return 0;
+	}
 }
 
 /**

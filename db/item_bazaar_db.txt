@@ -1,0 +1,38 @@
+//===================================================================
+// Item Bazaar file
+//-------------------------------------------------------------------
+// ID,ItemID,Flags,Limit,Cost,Item:Amount{,Item:Amount{,..}}
+//-------------------------------------------------------------------
+//
+// This database file contains the items which can be purchased through
+// the bazaar shop. For more information on the bazaar shop, please see
+// the doc/stormbreaker.txt file.
+//
+// ID					: The unique identifier for the bazaar record
+// ItemID				: The item which can be bought
+// Flags				: The flags indicating the behaviour
+// Limit				: The maximum number of items that can be bought
+// Cost					: The item cost in the shop
+// Item:Amount			: The item and quantity which must be sold
+//
+// Flags:
+//		0x01		The item is only unlocked once per account
+//		0x02		The item can be unlocked more than once
+//		0x04		The item is unlocked permanently (no limit)
+//		0x10		The item is bound to the character
+//		0x20		The item is not affected by discount
+//
+// For example:
+//	1,12534,0x1,1,60000,608:10
+//
+// Means:
+//	Selling Yggdrasil Seed x10 to any shop unlocks the purchase of
+//	Yggdrasil Seed Box from the bazaar at 60000z. The item is only
+//	unlocked/available once per account.
+//
+// Note:
+//	Items sold do not share between bazaar shop entries. Therefore
+//	if one bazaar shop entry requires 5 of one item, and another
+//	requires 10, it would mean a total of 15 items required.
+//
+//-------------------------------------------------------------------

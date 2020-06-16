@@ -48,6 +48,7 @@
 #include "pet.hpp"
 #include "quest.hpp"
 #include "storage.hpp"
+#include "stormbreaker.hpp"
 #include "trade.hpp"
 
 using namespace rathena;
@@ -3658,6 +3659,9 @@ void map_flags_init(void){
 		mapdata->flag[MF_NOCOMMAND] = false; // nocommand mapflag level
 		map_setmapflag_sub(i, MF_BEXP, true, &args); // per map base exp multiplicator
 		map_setmapflag_sub(i, MF_JEXP, true, &args); // per map job exp multiplicator
+#ifdef STORM_ITEM_DURABILITY
+		map_setmapflag_sub(i, MF_ITEM_DURABILITY, true, &args);
+#endif
 
 		// Clear adjustment data, will be reset after loading NPC
 		mapdata->damage_adjust = {};
@@ -4847,6 +4851,14 @@ bool map_setmapflag_sub(int16 m, enum e_mapflag mapflag, bool status, union u_ma
 			}
 			mapdata->flag[mapflag] = status;
 			break;
+#ifdef STORM_ITEM_DURABILITY
+		case MF_ITEM_DURABILITY:
+			if (status)
+				mapdata->flag[mapflag] = args->flag_val;
+			else
+				mapdata->flag[mapflag] = 100;
+			break;
+#endif
 		default:
 			mapdata->flag[mapflag] = status;
 			break;
@@ -4924,6 +4936,7 @@ void do_final(void){
 	do_final_vending();
 	do_final_buyingstore();
 	do_final_path();
+	do_final_storm();
 
 	map_db->destroy(map_db, map_db_final);
 
@@ -5222,6 +5235,7 @@ int do_init(int argc, char *argv[])
 	add_timer_interval(gettick()+1000, map_freeblock_timer, 0, 0, 60*1000);
 	
 	map_do_init_msg();
+	do_init_storm();
 	do_init_path();
 	do_init_atcommand();
 	do_init_battle();

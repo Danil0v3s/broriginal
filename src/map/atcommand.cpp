@@ -1392,6 +1392,10 @@ ACMD_FUNC(item)
 
 	for(j--; j>=0; j--){ //produce items in list
 		unsigned short item_id = item_data[j]->nameid;
+#ifdef STORM_ITEM_DURABILITY
+		struct item_data* it = itemdb_search(item_id);
+#endif
+
 		//Check if it's stackable.
 		if (!itemdb_isstackable2(item_data[j]))
 			get_count = 1;
@@ -1403,6 +1407,7 @@ ACMD_FUNC(item)
 				item_tmp.nameid = item_id;
 				item_tmp.identify = 1;
 				item_tmp.bound = bound;
+				STORM_DURABILITY(it, item_tmp);
 				if ((flag = pc_additem(sd, &item_tmp, get_count, LOG_TYPE_COMMAND)))
 					clif_additem(sd, 0, 0, flag);
 			}
@@ -1485,6 +1490,9 @@ ACMD_FUNC(item2)
 		}
 
 		for (i = 0; i < loop; i++) {
+#ifdef STORM_ITEM_DURABILITY
+			struct item_data* it = itemdb_search(item_id);
+#endif
 			// if not pet egg
 			if (!pet_create_egg(sd, item_id)) {
 				memset(&item_tmp, 0, sizeof(item_tmp));
@@ -1497,6 +1505,7 @@ ACMD_FUNC(item2)
 				item_tmp.card[2] = c3;
 				item_tmp.card[3] = c4;
 				item_tmp.bound = bound;
+				STORM_DURABILITY(it, item_tmp);
 				if ((flag = pc_additem(sd, &item_tmp, get_count, LOG_TYPE_COMMAND)))
 					clif_additem(sd, 0, 0, flag);
 			}
@@ -4588,11 +4597,28 @@ ACMD_FUNC(repairall)
 
 	count = 0;
 	for (i = 0; i < MAX_INVENTORY; i++) {
+#ifdef STORM_ITEM_DURABILITY
+		if (sd->inventory.u.items_inventory[i].nameid && sd->inventory.u.items_inventory[i].card[0] != CARD0_PET && sd->inventory.u.items_inventory[i].attribute == 1) {
+			struct item* it = &sd->inventory.u.items_inventory[i];
+			if (it->nameid) {
+				if (it->attribute == 1) {
+					it->attribute = 0;
+					clif_produceeffect(sd, 0, it->nameid);
+					count++;
+				}
+				if (it->durability < STORM_ITEM_MAX_DURABILITY && battle_config.storm_item_durability_repair) {
+					it->durability = STORM_ITEM_MAX_DURABILITY;
+					count++;
+				}
+			}
+		}
+#else
 		if (sd->inventory.u.items_inventory[i].nameid && sd->inventory.u.items_inventory[i].card[0] != CARD0_PET && sd->inventory.u.items_inventory[i].attribute == 1) {
 			sd->inventory.u.items_inventory[i].attribute = 0;
 			clif_produceeffect(sd, 0, sd->inventory.u.items_inventory[i].nameid);
 			count++;
 		}
+#endif
 	}
 
 	if (count > 0) {
@@ -5952,7 +5978,9 @@ void getring (struct map_session_data* sd)
 	char flag = 0;
 	unsigned short item_id;
 	struct item item_tmp;
+	struct item_data* it;
 	item_id = (sd->status.sex) ? WEDDING_RING_M : WEDDING_RING_F;
+	it = itemdb_search(item_id);
 
 	memset(&item_tmp, 0, sizeof(item_tmp));
 	item_tmp.nameid = item_id;
@@ -5960,6 +5988,7 @@ void getring (struct map_session_data* sd)
 	item_tmp.card[0] = 255;
 	item_tmp.card[2] = sd->status.partner_id;
 	item_tmp.card[3] = sd->status.partner_id >> 16;
+	STORM_DURABILITY(it, item_tmp);
 
 	if((flag = pc_additem(sd,&item_tmp,1,LOG_TYPE_COMMAND))) {
 		clif_additem(sd,0,0,flag);
@@ -6729,8 +6758,7 @@ ACMD_FUNC(npctalk)
 	bool ifcolor=(*(command + 8) != 'c' && *(command + 8) != 'C')?0:1;
 	unsigned long color=0;
 
-	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT))
-		return -1; //no "chatting" while muted.
+if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT) || sd->special_state.no_chat)		return -1; //no "chatting" while muted.
 
 	if(!ifcolor) {
 		if (!message || !*message || sscanf(message, "%49[^,], %99[^\n]", name, mes) < 2) {
@@ -6778,8 +6806,7 @@ ACMD_FUNC(pettalk)
 		return -1;
 	}
 
-	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT))
-		return -1; //no "chatting" while muted.
+	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT) || sd->special_state.no_chat)		return -1; //no "chatting" while muted.
 
 	if (!message || !*message || sscanf(message, "%99[^\n]", mes) < 1) {
 		clif_displaymessage(fd, msg_txt(sd,1224)); // Please enter a message (usage: @pettalk <message>).
@@ -7662,8 +7689,7 @@ ACMD_FUNC(homtalk)
 		sd->cantalk_tick = gettick() + battle_config.min_chat_delay;
 	}
 
-	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT))
-		return -1; //no "chatting" while muted.
+	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT) || sd->special_state.no_chat)		return -1; //no "chatting" while muted.
 
 	if ( !hom_is_active(sd->hd) ) {
 		clif_displaymessage(fd, msg_txt(sd,1254)); // You do not have a homunculus.
@@ -8070,8 +8096,7 @@ ACMD_FUNC(me)
 	memset(tempmes, '\0', sizeof(tempmes));
 	memset(atcmd_output, '\0', sizeof(atcmd_output));
 
-	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT))
-		return -1; //no "chatting" while muted.
+	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT) || sd->special_state.no_chat)		return -1; //no "chatting" while muted.
 
 	if (!message || !*message || sscanf(message, "%255[^\n]", tempmes) < 0) {
 		clif_displaymessage(fd, msg_txt(sd,1302)); // Please enter a message (usage: @me <message>).

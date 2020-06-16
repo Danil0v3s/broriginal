@@ -7,6 +7,8 @@
 #include "../common/db.hpp"
 #include "../common/mmo.hpp" // ITEM_NAME_LENGTH
 
+#include "stormbreaker.hpp"
+
 ///Maximum allowed Item ID (range: 1 ~ 65,534)
 #define MAX_ITEMID USHRT_MAX
 ///Use apple for unknown items.
@@ -854,6 +856,13 @@ struct item_data
 
 	bool isStackable();
 	int inventorySlotNeeded(int quantity);
+
+#ifdef STORM_ITEM_STATUS
+	bool passive_status;
+#endif
+#ifdef STORM_ITEM_SCRIPT
+	bool passive_script;
+#endif
 };
 
 // Struct for item random option [Secret]
@@ -953,6 +962,8 @@ bool itemdb_parse_roulette_db(void);
 
 struct s_random_opt_data *itemdb_randomopt_exists(short id);
 struct s_random_opt_group *itemdb_randomopt_group_exists(int id);
+
+void itemdb_jobid2mapid(uint64 *bclass, uint64 jobmask);
 
 void itemdb_reload(void);
 

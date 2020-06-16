@@ -1,0 +1,475 @@
+//===========================================================
+// Stormbreaker Documentation
+//-----------------------------------------------------------
+//
+// This document contains information on the added bonuses and
+// scripts included in the Stormbreaker package.
+//
+//-----------------------------------------------------------
+
+//===========================================================
+// Item Bonuses
+//-----------------------------------------------------------
+
+bonus bChangeRace,r;						Change the current player race to r
+bonus bChangeSize,n;						Changes the current player size to n (n = Size_Small, Size_Medium, Size_Big)
+bonus bAddHomIntimacy,n;					Increases intimacy gained from feeding homunculus by n% (does not affect decrease)
+bonus bAddSkillMovement,s;					Enables walking while casting skills at s% walking speed
+bonus bAddEvadeTrap,n;						Increases chance of avoiding a trap when within range by n%
+bonus bAddEvadeCritical,n;					Increases chance of avoiding a critical hit by n%
+bonus bNoAreaMagic,n;						Adds n% reduction to received area magical damage
+bonus bNoSingleMagic,n;						Adds n% reduction to received single magical damage
+bonus bKeepBuffs;							Allows positive buffs to remain upon death (n is meaningless)
+bonus2 bIgnoreGTB,n,c;						Adds an c% chance to ignore a target's GTB effect dealing n% damage
+											--
+											These values stack so that (n = 20, x = 1) and (n = 10, x = 2)
+											become a 3% chance to ignore and deal 30% damage.
+bonus2 bCriticalDodge,n,c;					Adds an c% chance to completely ignore damage when below n% HP
+bonus3 bAreaSkill,sk,x,c;					Adds a c% chance of skill sk being cast in an area of x * x cells
+bonus3 bSkillGainSP,sk,x,c;					Adds a c% chance of gaining x SP when skill sk is used
+bonus2 bAddStatusDamage,n,c;				Adds c% damage to targets inflicted with status n (n: SC_POISON, SC_INCREASEAGI etc.)
+bonus2 bAddStatusResist,st,x;				Adds x% resistance to being inflicted with status st (includes buffs)
+bonus3 bAddStatusSwitch,n,x,y;				Adds y% chance of status n instead becoming status x when inflicted on the player
+bonus bHealAttack,n;						Causes magic healing skills to become attack skills regardless of race or element (n: 1 = enemies, 2 = party/guild, 4 = self, combinable)
+bonus2 bHPAttackRatio,r,n;					Adds up to n% attack power depending on the current HP of the enemy of race r
+bonus2 bSPAttackRatio,r,n;					Adds up to n% attack power depending on the current SP of the enemy of race r
+bonus3 bHPDrainRate,r,n,c;					Adds a c/10% chance to drain n% HP from enemies of race r and absorbing it as HP
+bonus3 bSPDrainRate,r,n,c;					Adds a c/10% chance to drain n% SP from enemies of race r and absorbing it as SP
+bonus3 bAtkEmotion,n,x,c;					Adds a c% chance of displaying emotion n when satisfying x (x: 1 = attacking, 2 = being attacked, 3 = both)
+bonus bAddStatusRate,n;						Improves the chances of inflicting any status on an enemy by n%
+bonus2 bAddStatusRate,st,n;					Improves the chances of inflicting status st on an enemy by n%
+bonus3 bIgnoreSkillDefEle,sk,e,n;			Ignores n% of DEF/MDEF when using skill sk on enemies of element e
+bonus3 bIgnoreSkillDefRace,sk,r,n;			Ignores n% of DEF/MDEF when using skill sk on enemies of race r
+bonus bSwitchPlace,n;						Adds a n% chance of swapping place with the target when attacking
+bonus4 bWideStatus,st,n,x,c;				Adds a c/100% chance of inflicting status st for n milliseconds in an area of x * x around the wearer
+bonus4 bWideStatusOnHit,st,n,x,c;			Adds a c/100% chance of inflicting status st for n milliseconds in an area of x * x around the wearer when being attacked
+bonus bSkillChain,n;						Adds an n/100% chance of casting the same skill again at no additional cost on a nearby enemy when the target dies
+bonus2 bSkillChain,sk,n;					Adds an n/100% chance of casting the same skill sk again at no additional cost on a nearby enemy when the target dies
+bonus bSkillBounce,n;						Adds an n/100% chance of any targetted skill cast at an enemy being applied to the wearer instead
+bonus2 bSkillBounce,sk,n;					Adds an n/100% chance of a targetted skill sk cast at an enemy being applied to the wearer instead
+bonus2 bSubJob,i,n;							Decreases damage received by n% when dealt by a player of job i (i = JOB_NOVICE, JOB_SWORDMAN etc.)
+bonus2 bAddJob,i,n;							Increases damage dealt by n% when dealt to a player of job i (i = JOB_NOVICE, JOB_SWORDMAN etc.)
+bonus2 bAddMonsterDropItemAtk,i,c;			Adds a c/100% chance of any monster dropping item i when being attacked
+bonus2 bAddMonsterDropItemGroupAtk,i,c;		Adds a c/100% chance of any monster dropping an item from item group i when being attacked
+bonus3 bAddRaceDropItemAtk,i,r,c;			Adds a c/100% chance of a monster of race r dropping item i when being attacked
+bonus3 bAddClassDropItemAtk,i,x,c;			Adds a c/100% chance of a monster of class x dropping item i when being attacked
+bonus2 bSelfDropItemAtk,i,c;				Adds a c/100% chance of dropping item i from the wearer's inventory when being attacked
+bonus2 bSelfDropItemAtkGroup,i,c;			Adds a c/100% chance of dropping an item from item group i from the wearer's inventory when being attacked
+bonus3 bAddStatus,st,n,c;					Adds a c/100% chance of inflicting status st on an enemy for n milliseconds
+bonus bAddPetIntimacy,n;					Increases intimacy gained from feeding a pet by n%
+bonus bInterrupt,n;							Adds an n/100% chance of interrupting a player's continuous attack
+bonus bInvert,n;							Adds an n/100% chance of inverting the player's current HP and SP
+bonus2 bBreakEquip,e,n;						Adds an n/100% chance of breaking own equipment at location e (e = EQI_HEAD_TOP, EQI_HAND_L etc.)
+bonus2 bMultiDrop,n,c;						Adds a c/100% chance of a monster dropping an item of n quantity (instead of 1)
+bonus bDoubleCast,n;						Adds an n/100% chance of auto-casting the same skill again at no extra cost (doesn't work with ground/trap skills)
+bonus2 bDoubleCast,sk,n;					Adds an n/100% chance of auto-casting skill sk again at no extra cost (doesn't work with ground/trap skills)
+bonus bIgnoreFlee,n;						Ignore n% of a target's FLEE when attacking
+bonus bDeath,n;								Adds an n/100% chance of instantly killing the enemy when attacking (cannot be blocked)
+bonus bWaterAtkRate,n;						Increases damage dealt by n% when standing on a water cell
+bonus bWaterMatkRate,n;						Increases magic damage dealt by n% when standing on a water cell
+bonus2 bGravity,x,n;						Adds an n/100% chance of drawing all enemies within an x * x area one cell closer to the wearer (does not work with skills)
+bonus bNoChat;								Prevents talking (public, party, guild, chatroom etc.)
+bonus bNoConsume,n;							Adds an n/10% chance of not consuming any SP, HP or item requirements when using a skill
+bonus bNoAmmo,n;							Adds an n/10% chance of not consuming ammunition when attacking
+bonus bSnapMove;							Moving to an unobstructed cell now snaps the wearer immediately
+bonus bZenyAttack,n;						Each weapon attack consumes n Zeny (cannot attack if not enough Zeny)
+bonus bItemAttack,i;						Each weapon attack consumes an item i (cannot attack if no items)
+bonus bAutoLife,n;							Adds an n/100% chance of being resurrected upon death
+bonus bDamageLimit,n;						All damage is capped up to n damage
+bonus bHPLimit,n;							Maximum HP is capped to n HP
+bonus bSPLimit,n;							Maximum SP is capped to n SP
+bonus2 bAtkRateChance,a,n;					Adds an n/10% chance of dealing an extra a% damage when attacking
+bonus2 bMatkRateChance,a,n;					Adds an n/10% chance of dealing an extra a% damage when magic attacking
+bonus bNoEquip,n;							Prevents equipment from being attached at location e (e = EQI_HEAD_TOP, EQI_HAND_L etc.)
+bonus2 bWeaponDefRate,w,n;					Reduces damage from w type weapons by n%
+
+bonus bDurabilityDef,n;						Reduces durability loss of all equipment by n%
+bonus2 bDurabilityDef,e,n;					Reduces durability loss of equipment at location e by n% (e = EQI_HEAD_TOP, EQI_HAND_L etc.)
+bonus3 bAutoHPUse,i,h,n;					Adds an n/10% chance to use item i when receiving damage while below h% HP (not used if item is not in the inventory)
+bonus3 bAutoSPUse,i,s,n;					Adds an n/10% chance to use item i when dealing damage while below s% SP (not used if item is not in the inventory)
+bonus3 bAutoStatusUse,i,s,n;				Adds an n/10% chance to use item i when afflicted with status s (not used if item is not in the inventory)
+bonus bNoItemUse;							Prevents the use of any usable items.
+bonus bNoSkillUse;							Prevents the use of any skills.
+bonus bNoWalk;								Prevents being able to move.
+bonus bUndetectable;						Monsters will not attack the wearer until engaged, including angry monsters
+bonus bSkillRequireCost,n;					Increases the skill requirement costs (HP, SP, ammunition, gemstones etc.) of all skills by n (n = 1: double, n = 2: triple, etc.)
+bonus2 bSkillRequireCost,sk,n;				Increases the skill requirement costs (HP, SP, ammunition, gemstones etc.) of skill sk by n (n = 1: double, n = 2: triple, etc.)
+bonus bItemHPToSP;							All item healing effects which recover HP will instead recover SP
+bonus bItemSPToHP;							All item healing effects which recover SP will instead recover HP
+bonus bCastZenyCost;						All skills consume Zeny instead of SP
+bonus bCastHPCost;							All skills consume HP instead of SP
+
+//===========================================================
+// Script Commands
+//-----------------------------------------------------------
+
+// Variable NPCs
+//---------------------------------------
+
+Stormbreaker adds support for NPCs to become visible/invisible depending on whether a particular variable is
+registered against the player. The variable must either be a permanent character variable, local account variable
+or a global account variable, and must also be a numeric value:
+
+	  VariableName		- Valid, character variable
+	 #VariableName		- Valid, account variable
+	##VariableName		- Valid, global account variable
+ 
+To make an NPC dependent on one of these variables you must place the variable name immediately following the
+direction in the NPC placement declaration. For example:
+
+	// NPC
+	<map name>,<x>,<y>,<facing>,<variable>%TAB%script%TAB%<NPC Name>%TAB%<sprite id>
+
+	// Shop
+	<map name>,<x>,<y>,<facing>,<variable>%TAB%shop%TAB%<NPC Name>%TAB%<sprite id>
+
+	// Warp
+	<from mapname>,<fromX>,<fromY>,<facing>,<variable>%TAB%warp%TAB%<warp name>%TAB%<spanx>,<spany>,<to mapname>,<toX>,<toY>
+	<from mapname>,<fromX>,<fromY>,<facing>,<variable>%TAB%warp2%TAB%<warp name>%TAB%<spanx>,<spany>,<to mapname>,<toX>,<toY>
+
+A player who does not have the variable set, or the variable value is less than zero, will not be able to see or
+interact with the NPCs. This also affects NPCs which have a trigger area when stepped on.
+
+To allow access to these NPCs, simply set the relevant variable as you would any other variable:
+
+	VariableName = 1;
+	
+If the player is within visual range of the NPC, the NPC will become available immediately. Similarly if the
+variable is unset:
+
+	VariableName = 0;
+	
+The NPC will become immediately unavailable. It's important to note that even though an NPC might not be visually
+available to the player they will still not be able to stand on the coordinates. It will appears as though an
+invisible object is occupying the space.
+
+// Bazaar Shop
+//---------------------------------------
+
+The bazaar shop is a specialist shop which allows the player to buy items which have been unlocked from selling
+items from general shops. The NPC can be declared by using the 'bazaarshop' script type, but the item list
+is entirely optional.
+
+	// NPC
+	<map name>,<x>,<y>,<facing>%TAB%bazaarshop%TAB%<NPC name>%TAB%<sprite id>{,<item>{,<item>}}
+	
+If the item list is provided at the end of the shop, the shop will be restricted to showing only those items. This
+means you can have different shops for different types of item.
+
+---------------------------------------
+
+*inventoryselect <flag>{,<equip>,{,<item1>{,<item2>{,..}}}}
+
+Gets an item selection from the character inventory by opening a prompt which displays the item name
+and the relevant drop texture.
+
+When <flag> has 0x008 active, the <equip> parameter can be used to filter the list of equipment. If the
+<equip> parameter has a value of '0' then all equipment is shown (defaults to 0xFFFF).
+
+When any of the <item> parameters are provided, the entire inventory selection list is filtered down to
+items which match any of the provided item IDs.
+
+This command does not display equipment which is currently equipped on the player, the equipment must be
+removed in order to show on the list.
+
+Returns:
+	'0'		If the player cancels the selection
+	'1'		If the player has chosen an item
+	'-1'	If the player has no items matching the search criteria
+	
+When a selection is made, the selection values are pushed into temporary variables with the following:
+
+	@select_id				The item ID
+	@select_amount			The amount of the item
+	@select_equip			The position which the equipment is equipped in (see EQP_* constants)
+	@select_refine			The item refine level
+	@select_identify		The item identification state
+	@select_attribute		The item broken state
+	@select_cards			The item IDs of the cards slotted into the item
+	@select_option_ids		The random option IDs of the item
+	@select_option_vals		The random option values of the item
+	@select_option_params	The random option parameters of the item
+
+Flag:
+
+	0x0001	Healing Items
+	0x0002	Usable Items
+	0x0004	Etc. Items
+	0x0008	Equipment
+	0x0010	Cards
+	0x0020	Pet Egg
+	0x0040	Pet Equipment
+	0x0080	Ammo
+	0x0100	Usable (with delayed consumption)
+	0x0200	Shadow Equipment
+	0x0400	Usable (with delayed consumption and confirmation)
+	------
+	0x0800	Allow unidentified items
+	0x1000	Allow broken items
+	------
+	0xFFFF	All
+
+Equip:
+
+	0x000200	Upper Headgears
+	0x000100	Middle Headgears
+	0x000001	Lower Headgears
+	0x000010	Armors
+	0x000002	Weapons
+	0x000020	Shields
+	0x000040	Footgears
+	0x000004	Garments
+	0x000088	Accessories
+	0x000400	Costume Upper Headgears
+	0x000800	Costume Middle Headgears
+	0x001000	Costume Lower Headgears
+	0x002000	Costume Garment/Robe
+	0x008000	Ammunition
+	0x010000	Shadow Armor
+	0x020000	Shadow Weapon
+	0x040000	Shadow Shield
+	0x080000	Shadow Shoes
+	0x300000	Shadow Accessories
+	--------
+	0xFFFFFF	All
+
+---------------------------------------
+
+*skillselect <skill>{,<skill>{,..}}
+
+Gets a skill selection from the character by opening a prompt which displays the skill name and
+the relevant skill icon.
+
+The <skill> parameter can be either a skill ID or the name of a skill. For example:
+
+skill "MG_FIREBOLT",20; // Fire Bolt, Lightning Bolt
+
+Returns:
+	'0'		If the player cancels the selection
+	'-1'	If none of the skills are valid
+	<skill>	The ID of the selected skill if a selection is made
+
+---------------------------------------
+
+*getdurabilityid <number>;
+
+Gets an item identifier from the player's inventory (including equipped items) which has a durability
+of less than 100%. If the command cannot find an item at the provided number then the command returns 0.
+
+Example:
+
+	@repairable = 0;
+	@cost = 0;
+
+	while ((@id = getdurabilityid(1 + @repairable)) > 0) {
+		@cost += 100 - getdurability(1 + @repairable);
+		@repairable++;
+	}
+	
+	@cost *= 100; // 100 Zeny per 1%
+	
+	mes "You have " + @repairable + " items.";
+	mes "This will cost you " + @cost + " Zeny.";
+	close;
+	
+---------------------------------------
+
+*getdurability {<id>};
+
+Gets the current durability of the equipped item rounded to the nearest 1%. When the durability of a piece
+of equipment has dropped 1% (ie. 98 -> 97) the player is refreshed, so equipment using this method will always
+have the latest durability value.
+
+The <id> parameter can be passed in to indicate a specific item in the player's inventory, as produced by the
+getdurabilityid; script command.
+
+---------------------------------------
+
+*getequipdurability <position>;
+
+Gets the current durability of an equipped item, rounded to the nearest 1%, at the equipment position <position>
+which is a valid location such as EQI_HEAD_TOP, EQI_HAND_R etc.
+
+---------------------------------------
+
+*setdurability <id>, <value>;
+
+Sets the current durability of the equipped item. The <value> argument is a value between 0 and 100. If the new
+durability value is 0% and the battle configuration is setup to break the item, the item will break.
+
+The <id> parameter must be passed in to indicate a specific item in the player's inventory, as produced by the
+getdurabilityid; script command.
+
+Example:
+	
+	while ((@id = getdurabilityid(1)) > 0) {
+		setdurability @id, 100;
+	}
+	
+---------------------------------------
+
+*openrefine;
+
+Opens the new refine user interface for the attached player. This is the new user interface which allows the
+player to drag a piece of equipment onto the interface, and choose a material to refine with.
+
+Note: This requires 2016-10-12aRagexeRE or later
+
+---------------------------------------
+
+*opencraft;
+
+Opens the new craft user interface for the attached player. This is the same interface as the refine one, except
+that the player can upgrade items depending on the entries in db/item_craft_db.txt
+
+Note: This requires 2016-10-12aRagexeRE or later
+
+---------------------------------------
+
+*openenchant;
+
+Opens the new enchantment user interface for the attached player. This is the same interface as the refine one, except
+that the player can enchant random options onto items depending on the entries in db/item_enchant_db.txt
+
+Note: This requires 2016-10-12aRagexeRE or later
+
+---------------------------------------
+
+*openshop <items>,<flag>{,<param>};
+
+Opens a shop buying window with the provided list of items. The <items> parameter is expected to be an array of values
+containing the item ID and the item cost, therefore the array must contain an even number of items, and must be greater
+than zero in length.
+
+The <param> parameter should be supplied if the shop is either an 'itemshop' or 'pointshop'. If an 'itemshop' the param
+should be the ID of the item to consume when purchasing, otherwise if a 'pointshop' the param should be the name of the
+variable to use when purchasing.
+
+The shop is not shared with any other player, therefore it's possible to make shops selling specific items to specific
+players based on variables, class or other factors. The shop does not support the "OnBuyItem" and "OnSellItem" labels.
+
+The main difference between this command and the one offered using the callshop; command is that the callshop; script
+command requires an existing floating shop to work correctly. Any changes made by other players while another player has
+the shop open can result in the shop not working correctly.
+
+The <flag> parameter can be used to indicate further options.
+
+Flag:
+
+	0x01	The discount skill does not work
+	0x02	The shop will function as a 'cashshop'
+	0x04	The shop will function as an 'itemshop'
+	0x08	The shop will function as a 'pointshop'
+	
+Example:
+
+	setarray @items[0], 501, 500, 502, 1000, 503, 2000;
+	
+	if (BaseLevel >= 120) {
+		@items[6] = 607;
+		@items[7] = 10000;
+	}
+	
+	openshop @items, 0x0; // Normal
+	openshop @items, 0x2; // Cash
+	openshop @items, 0x4, 501; // Item (Red Potion)
+	openshop @items, 0x8, MyVariable; // Point (using MyVariable)
+	
+	
+Note: This command used with 'cashshop', 'itemshop' or 'pointshop' requires 2010-11-16aRagexeRE or later.
+
+---------------------------------------
+
+*partymonster "<map>",<x>,<y>,"<name to show>",<mob id>,<amount>{,"<event label>",<size>,<ai>}
+
+Summons a monster using the provided parameters in the same manner as the monster; command, except that the monster
+spawned can only be attacked by the player attached to the script, and any party members associated with that player.
+
+If the player is not in a party then only the player can attack the enemy. If the player opens a party after the monster
+has been summoned then the party will still be able to attack the monster.
+
+---------------------------------------
+
+*statusbonus <status>,"{ <script> }";
+
+Provides an additional script bonus active while the provided status effect is active. When the status expires, the script
+effect is cancelled. The status should be a value prefixed with SC. This script command is intended for use in equipment.
+
+Example:
+
+	statusbonus SC_INCREASEAGI,"{ bonus bHit,20; }";	// +50 HIT while Increase Agility is active
+	statusbonus SC_BLIND,"{ bonus bFlee,-30; }";		// -30 FLEE while Blind is active
+
+//===========================================================
+// Mapflags
+//-----------------------------------------------------------
+
+<map>%TAB%mapflag%TAB%item_durability%TAB%<rate>
+
+Indicates the rate at which item durability is lost on the current map. The default rate for any map is 100%, where the
+item durability will decrease at the normal rate. The <rate> parameter is required and is used to indicate the new rate.
+
+When set to 50, an item losing 0.1% durability will instead lose 0.05% durability. When set to 0, all items will not lose
+any durability on the map.
+
+//===========================================================
+// GM Commands
+//-----------------------------------------------------------
+
+@questadd <id>
+
+Adds a quest with the provided ID to the player.
+
+---------------------------------------
+
+@questcomplete <id>
+
+Completes a quest with the provided ID for the player.
+
+---------------------------------------
+
+@questremove <id>
+
+Removes a quest with the provided ID from the player.
+
+---------------------------------------
+
+@questupdate <id> <mob> {<count>}
+
+Updates the objective count of a quest with the provided ID, where the objective is to hunt the provided monster ID.
+If the <count> parameter is provided, the quest objective is updated with that number of kills.
+
+---------------------------------------
+
+@durability
+
+Lists the equipped items of the player and the current durability level.
+
+---------------------------------------
+
+@resetbazaar {<id>}
+
+Resets the entire bazaar records for a player. This includes the unlocked bazaar shop items, as well as the total counts
+of items sold against the player, effectively resetting all bazaar records.
+
+If the <id> parameter is provided, this command instead resets the unlocked status of a bazaar item with the provided id.
+
+---------------------------------------
+
+@openrefine
+
+Opens the new refine interface.
+
+---------------------------------------
+
+@opencraft
+
+Opens the new crafting interface.
+
+---------------------------------------
+
+@openenchant
+
+Opens the new enchanting interface.
+
+---------------------------------------

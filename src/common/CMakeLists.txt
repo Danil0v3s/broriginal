@@ -99,6 +99,7 @@ set( COMMON_BASE_HEADERS
 	"${COMMON_SOURCE_DIR}/showmsg.hpp"
 	"${COMMON_SOURCE_DIR}/socket.hpp"
 	"${COMMON_SOURCE_DIR}/strlib.hpp"
+	"${COMMON_SOURCE_DIR}/stormbreaker.hpp"
 	"${COMMON_SOURCE_DIR}/timer.hpp"
 	"${COMMON_SOURCE_DIR}/utils.hpp"
 	"${COMMON_SOURCE_DIR}/msg_conf.hpp"

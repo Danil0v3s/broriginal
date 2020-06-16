@@ -1,0 +1,21 @@
+//===================================================================
+// Item Passive Script file
+//-------------------------------------------------------------------
+// ItemID{,Flag},{ Script }
+//-------------------------------------------------------------------
+//
+// A passive script remains active against a character for as long as
+// the item is present in the inventory.
+//
+// An item may have up to 3 passive scripts associated with it, each
+// should be defined on a separate row.
+//
+// ItemID	:	The unique item ID which should activate the status
+// Flag		:	See below.
+// Script	:	The script to run
+//
+// Flag:
+//		IPF_NONE	The script is always active
+//		IPF_EQUIP	The script is only active while the item is equipped
+//
+//-------------------------------------------------------------------

@@ -1,0 +1,39 @@
+//===================================================================
+// Item Crafting file
+//-------------------------------------------------------------------
+// ItemID,CraftedID,MaterialID,Chance,Cost{,Flag}
+//-------------------------------------------------------------------
+//
+// This database file can contain the collection of items which can be
+// crafted (or upgraded) using special materials. An item supports up
+// to 4 different crafted items.
+//
+// ItemID		:	The item which can be crafted/upgraded
+// CraftedID	:	The item which is crafted after success
+// MaterialID	:	The item or material needed to craft the item
+// Chance		:	The chance of the craft succeeding (%)
+// Cost			:	The cost of the craft
+// Flag			:	The optional additional flags
+//
+// Flag:
+//		0x01	The refine level is kept
+//		0x02	The slotted cards are kept
+//		0x04	The random options are kept
+//		0x08	The item durability is kept
+//		0x0F	All of the above
+//
+// For example:
+//	1201,1202,6032,80,5000
+//	1201,1207,6089,50,20000
+//  501,502,706,100,100
+//
+// Means:
+//  Knife[3] -> Knife[4] using Horn of Hillslion, 80% chance, 5000z
+//  Knife[3] -> Main Gauche[3] using Dark Piece, 50% chance, 20000z
+//  Red Potion -> Orange Potion using Four Leaf Cover, 100% chance, 100z
+//
+// Please note that the crafting system uses the same user interface
+// as the new refine UI, so this system requires a client version of
+// 2016-10-12aRagexeRE or later.
+//
+//-------------------------------------------------------------------

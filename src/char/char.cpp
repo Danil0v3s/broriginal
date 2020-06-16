@@ -510,6 +510,76 @@ int char_mmo_char_tosql(uint32 char_id, struct mmo_charstatus* p){
 			strcat(save_status, " hotkeys");
 	}
 #endif
+
+#ifdef STORM_BAZAAR
+	// `bazaar_sell`
+	for (i = 0, diff = 0; i < MAX_BAZAAR_SELL; i++)
+	{
+		bazaarsolditem* sold = &p->bazaar_sold[i];
+
+		if (sold->nameid == 0)
+			continue;
+
+		if (sold->amount == 0 && sold->id == 0)
+			continue;
+
+		StringBuf_Clear(&buf);
+
+		if (sold->amount == 0)
+			StringBuf_Printf(&buf, "DELETE FROM `%s` WHERE `id` = %u", schema_config.bazaar_sell_table, (unsigned int)sold->id);
+		else if (sold->id)
+			StringBuf_Printf(&buf, "UPDATE `%s` SET `item_id` = %u, `amount` = %u WHERE `id` = %u", schema_config.bazaar_sell_table, (unsigned int)sold->nameid, (unsigned int)sold->amount, sold->id);
+		else
+			StringBuf_Printf(&buf, "INSERT INTO `%s` (`char_id`, `item_id`, `amount`) VALUES (%u, %u, %u)", schema_config.bazaar_sell_table, char_id, (unsigned int)sold->nameid, (unsigned int)sold->amount);
+
+		if (SQL_ERROR == Sql_QueryStr(sql_handle, StringBuf_Value(&buf)))
+		{
+			Sql_ShowDebug(sql_handle);
+			errors++;
+		}
+
+		diff = 1;
+	}
+
+	if (diff)
+		strcat(save_status, " bazaarsold");
+
+	// `bazaar`
+	for (i = 0, diff = 0; i < MAX_BAZAAR_ITEMS; i++)
+	{
+		bazaarunlocked* buy = &p->bazaar_unlocked[i];
+
+		if (buy->bazaarid == 0 || buy->available == 0)
+			continue;
+
+		StringBuf_Clear(&buf);
+
+		if (buy->id)
+			StringBuf_Printf(&buf, "UPDATE `%s` SET `bazaar_id` = %u, `available` = %u, `bought` = %u WHERE `id` = %u", schema_config.bazaar_table, buy->bazaarid, (unsigned int)buy->available, (unsigned int)buy->bought, buy->id);
+		else
+		{
+			StringBuf_Printf(&buf, "INSERT INTO `%s` (`char_id`, `bazaar_id`, `available`, `bought`, `account_id`) VALUES(%u, %u, %u, %u, ", schema_config.bazaar_table, char_id, buy->bazaarid, (unsigned int)buy->available, (unsigned int)buy->bought);
+
+			if (buy->accountid)
+				StringBuf_Printf(&buf, "%u)", buy->accountid);
+			else
+				StringBuf_AppendStr(&buf, "NULL)");
+		}
+
+		if (SQL_ERROR == Sql_QueryStr(sql_handle, StringBuf_Value(&buf)))
+		{
+			Sql_ShowDebug(sql_handle);
+			errors++;
+		}
+
+		diff++;
+	}
+
+	if (diff)
+		strcat(save_status, " bazaarbuy");
+
+#endif
+
 	StringBuf_Destroy(&buf);
 	if (save_status[0]!='\0' && charserv_config.save_log)
 		ShowInfo("Saved char %d - %s:%s.\n", char_id, p->name, save_status);
@@ -566,6 +636,11 @@ int char_memitemdata_to_sql(const struct item items[], int max, int id, enum sto
 		offset = 2;
 	}
 
+#ifdef STORM_ITEM_DURABILITY
+	StringBuf_Printf(&buf, ", `durability`");
+	offset++;
+#endif
+
 	for( i = 0; i < MAX_SLOTS; ++i )
 		StringBuf_Printf(&buf, ", `card%d`", i);
 	for( i = 0; i < MAX_ITEM_RDM_OPT; ++i ) {
@@ -599,6 +674,11 @@ int char_memitemdata_to_sql(const struct item items[], int max, int id, enum sto
 		SqlStmt_BindColumn(stmt, 10, SQLDT_CHAR, &item.favorite,    0, NULL, NULL);
 		SqlStmt_BindColumn(stmt, 11, SQLDT_UINT, &item.equipSwitch, 0, NULL, NULL);
 	}
+
+#ifdef STORM_ITEM_DURABILITY
+	SqlStmt_BindColumn(stmt, 12, SQLDT_UINT, &item.durability, 0, NULL, NULL);
+#endif
+
 	for( i = 0; i < MAX_SLOTS; ++i )
 		SqlStmt_BindColumn(stmt, 10+offset+i, SQLDT_USHORT, &item.card[i], 0, NULL, NULL);
 	for( i = 0; i < MAX_ITEM_RDM_OPT; ++i ) {
@@ -639,6 +719,9 @@ int char_memitemdata_to_sql(const struct item items[], int max, int id, enum sto
 					items[i].attribute == item.attribute &&
 					items[i].expire_time == item.expire_time &&
 					items[i].bound == item.bound &&
+#ifdef STORM_ITEM_DURABILITY
+					items[i].durability == item.durability &&
+#endif
 					(tableswitch != TABLE_INVENTORY || (items[i].favorite == item.favorite && items[i].equipSwitch == item.equipSwitch)) )
 				;	//Do nothing.
 				else
@@ -649,6 +732,9 @@ int char_memitemdata_to_sql(const struct item items[], int max, int id, enum sto
 						tablename, items[i].amount, items[i].equip, items[i].identify, items[i].refine, items[i].attribute, items[i].expire_time, items[i].bound, items[i].unique_id);
 					if (tableswitch == TABLE_INVENTORY)
 						StringBuf_Printf(&buf, ", `favorite`='%d', `equip_switch`='%u'", items[i].favorite, items[i].equipSwitch);
+#ifdef STORM_ITEM_DURABILITY
+					StringBuf_Printf(&buf, ", `durability`='%u'", items[i].durability);
+#endif
 					for( j = 0; j < MAX_SLOTS; ++j )
 						StringBuf_Printf(&buf, ", `card%d`=%hu", j, items[i].card[j]);
 					for( j = 0; j < MAX_ITEM_RDM_OPT; ++j ) {
@@ -684,6 +770,9 @@ int char_memitemdata_to_sql(const struct item items[], int max, int id, enum sto
 	StringBuf_Printf(&buf, "INSERT INTO `%s`(`%s`, `nameid`, `amount`, `equip`, `identify`, `refine`, `attribute`, `expire_time`, `bound`, `unique_id`", tablename, selectoption);
 	if (tableswitch == TABLE_INVENTORY)
 		StringBuf_Printf(&buf, ", `favorite`, `equip_switch`");
+#ifdef STORM_ITEM_DURABILITY
+	StringBuf_Printf(&buf, ", `durability`");
+#endif
 	for( j = 0; j < MAX_SLOTS; ++j )
 		StringBuf_Printf(&buf, ", `card%d`", j);
 	for( j = 0; j < MAX_ITEM_RDM_OPT; ++j ) {
@@ -710,6 +799,9 @@ int char_memitemdata_to_sql(const struct item items[], int max, int id, enum sto
 			id, items[i].nameid, items[i].amount, items[i].equip, items[i].identify, items[i].refine, items[i].attribute, items[i].expire_time, items[i].bound, items[i].unique_id);
 		if (tableswitch == TABLE_INVENTORY)
 			StringBuf_Printf(&buf, ", '%d', '%u'", items[i].favorite, items[i].equipSwitch);
+#ifdef STORM_ITEM_DURABILITY
+		StringBuf_Printf(&buf, ", '%u'", items[i].durability);
+#endif
 		for( j = 0; j < MAX_SLOTS; ++j )
 			StringBuf_Printf(&buf, ", '%hu'", items[i].card[j]);
 		for( j = 0; j < MAX_ITEM_RDM_OPT; ++j ) {
@@ -792,6 +884,10 @@ bool char_memitemdata_from_sql(struct s_storage* p, int max, int id, enum storag
 		StringBuf_Printf(&buf, ", `favorite`, `equip_switch`");
 		offset = 2;
 	}
+#ifdef STORM_ITEM_DURABILITY
+	StringBuf_Printf(&buf, ", `durability`");
+	offset++;
+#endif
 	for( j = 0; j < MAX_SLOTS; ++j )
 		StringBuf_Printf(&buf, ",`card%d`", j);
 	for( j = 0; j < MAX_ITEM_RDM_OPT; ++j ) {
@@ -824,6 +920,11 @@ bool char_memitemdata_from_sql(struct s_storage* p, int max, int id, enum storag
 	if (tableswitch == TABLE_INVENTORY){
 		SqlStmt_BindColumn(stmt, 10, SQLDT_CHAR, &item.favorite,    0, NULL, NULL);
 		SqlStmt_BindColumn(stmt, 11, SQLDT_UINT, &item.equipSwitch, 0, NULL, NULL);
+#ifdef STORM_ITEM_DURABILITY
+		SqlStmt_BindColumn(stmt, 12, SQLDT_UINT, &item.durability, 0, NULL, NULL);
+	} else {
+		SqlStmt_BindColumn(stmt, 10, SQLDT_UINT, &item.durability, 0, NULL, NULL);
+#endif
 	}
 	for( i = 0; i < MAX_SLOTS; ++i )
 		SqlStmt_BindColumn(stmt, 10+offset+i, SQLDT_USHORT, &item.card[i],   0, NULL, NULL);
@@ -1017,6 +1118,10 @@ int char_mmo_char_fromsql(uint32 char_id, struct mmo_charstatus* p, bool load_ev
 #ifdef HOTKEY_SAVING
 	struct hotkey tmp_hotkey;
 	int hotkey_num;
+#endif
+#ifdef STORM_BAZAAR
+	bazaarunlocked bazaar_items_entry;
+	bazaarsolditem bazaar_sold_entry;
 #endif
 	StringBuf msg_buf;
 	char sex[2];
@@ -1217,6 +1322,40 @@ int char_mmo_char_fromsql(uint32 char_id, struct mmo_charstatus* p, bool load_ev
 			ShowWarning("mmo_char_fromsql: ignoring invalid hotkey (hotkey=%d,type=%u,id=%u,lv=%u) of character %s (AID=%d,CID=%d)\n", hotkey_num, tmp_hotkey.type, tmp_hotkey.id, tmp_hotkey.lv, p->name, p->account_id, p->char_id);
 	}
 	StringBuf_AppendStr(&msg_buf, " hotkeys");
+#endif
+
+#ifdef STORM_BAZAAR
+	// `bazaar_sell`
+	if (SQL_ERROR == SqlStmt_Prepare(stmt, "SELECT `id`, `item_id`, `amount` FROM `%s` WHERE `char_id`=?", schema_config.bazaar_sell_table)
+		|| SQL_ERROR == SqlStmt_BindParam(stmt, 0, SQLDT_INT, &char_id, 0)
+		|| SQL_ERROR == SqlStmt_Execute(stmt)
+		|| SQL_ERROR == SqlStmt_BindColumn(stmt, 0, SQLDT_UINT, &bazaar_sold_entry.id, 0, NULL, NULL)
+		|| SQL_ERROR == SqlStmt_BindColumn(stmt, 1, SQLDT_USHORT, &bazaar_sold_entry.nameid, 0, NULL, NULL)
+		|| SQL_ERROR == SqlStmt_BindColumn(stmt, 2, SQLDT_USHORT, &bazaar_sold_entry.amount, 0, NULL, NULL))
+		SqlStmt_ShowDebug(stmt);
+
+	for (i = 0; i < MAX_BAZAAR_SELL && SQL_SUCCESS == SqlStmt_NextRow(stmt); i++)
+		memcpy(&p->bazaar_sold[i], &bazaar_sold_entry, sizeof(bazaarsolditem));
+	
+	if (i)
+		StringBuf_AppendStr(&msg_buf, " bazaarsold");
+
+	// `bazaar`
+	if (SQL_ERROR == SqlStmt_Prepare(stmt, "SELECT `id`, `bazaar_id`, `available`, `bought` FROM `%s` WHERE `char_id`=? OR `account_id`=?", schema_config.bazaar_table)
+		|| SQL_ERROR == SqlStmt_BindParam(stmt, 0, SQLDT_INT, &char_id, 0)
+		|| SQL_ERROR == SqlStmt_BindParam(stmt, 1, SQLDT_INT, &p->account_id, 0)
+		|| SQL_ERROR == SqlStmt_Execute(stmt)
+		|| SQL_ERROR == SqlStmt_BindColumn(stmt, 0, SQLDT_UINT, &bazaar_items_entry.id, 0, NULL, NULL)
+		|| SQL_ERROR == SqlStmt_BindColumn(stmt, 1, SQLDT_UINT, &bazaar_items_entry.bazaarid, 0, NULL, NULL)
+		|| SQL_ERROR == SqlStmt_BindColumn(stmt, 2, SQLDT_USHORT, &bazaar_items_entry.available, 0, NULL, NULL)
+		|| SQL_ERROR == SqlStmt_BindColumn(stmt, 3, SQLDT_USHORT, &bazaar_items_entry.bought, 0, NULL, NULL))
+		SqlStmt_ShowDebug(stmt);
+
+	for (i = 0; i < MAX_BAZAAR_ITEMS && SQL_SUCCESS == SqlStmt_NextRow(stmt); i++)
+		memcpy(&p->bazaar_unlocked[i], &bazaar_items_entry, sizeof(bazaarunlocked));
+
+	if (i)
+		StringBuf_AppendStr(&msg_buf, " bazaarbuy");
 #endif
 
 	/* Mercenary Owner DataBase */
@@ -1510,7 +1649,7 @@ int char_make_new_char_sql(struct char_session_data* sd, char* name_, int str, i
 	char_id = (int)Sql_LastInsertId(sql_handle);
 	//Give the char the default items
 	for (k = 0; k <= MAX_STARTITEM && tmp_start_items[k].nameid != 0; k++) {
-		if( SQL_ERROR == Sql_Query(sql_handle, "INSERT INTO `%s` (`char_id`,`nameid`, `amount`, `equip`, `identify`) VALUES ('%d', '%hu', '%hu', '%hu', '%d')", schema_config.inventory_db, char_id, tmp_start_items[k].nameid, tmp_start_items[k].amount, tmp_start_items[k].pos, 1) )
+		if( SQL_ERROR == Sql_Query(sql_handle, "INSERT INTO `%s` (`char_id`,`nameid`, `amount`, `equip`, `identify`, `durability`) VALUES ('%d', '%hu', '%hu', '%hu', '%d', '%u')", schema_config.inventory_db, char_id, tmp_start_items[k].nameid, tmp_start_items[k].amount, tmp_start_items[k].pos, 1, 1000000) )
 			Sql_ShowDebug(sql_handle);
 	}
 
@@ -2445,6 +2584,9 @@ bool char_checkdb(void){
 	//checking mail_attachment_db
 	if( SQL_ERROR == Sql_Query(sql_handle, "SELECT  `id`,`index`,`nameid`,`amount`,`refine`,`attribute`,`identify`,"
 			"`card0`,`card1`,`card2`,`card3`,`option_id0`,`option_val0`,`option_parm0`,`option_id1`,`option_val1`,`option_parm1`,`option_id2`,`option_val2`,`option_parm2`,`option_id3`,`option_val3`,`option_parm3`,`option_id4`,`option_val4`,`option_parm4`,`unique_id`, `bound`"
+#ifdef STORM_ITEM_DURABILITY
+			",`durability`"
+#endif
 			" FROM `%s` LIMIT 1;", schema_config.mail_attachment_db) ){
 		Sql_ShowDebug(sql_handle);
 		return false;
@@ -2454,6 +2596,9 @@ bool char_checkdb(void){
 	if( SQL_ERROR == Sql_Query(sql_handle, "SELECT  `auction_id`,`seller_id`,`seller_name`,`buyer_id`,`buyer_name`,"
 			"`price`,`buynow`,`hours`,`timestamp`,`nameid`,`item_name`,`type`,`refine`,`attribute`,`card0`,`card1`,"
 			"`card2`,`card3`,`option_id0`,`option_val0`,`option_parm0`,`option_id1`,`option_val1`,`option_parm1`,`option_id2`,`option_val2`,`option_parm2`,`option_id3`,`option_val3`,`option_parm3`,`option_id4`,`option_val4`,`option_parm4`,`unique_id` "
+#ifdef STORM_ITEM_DURABILITY
+			",`durability` "
+#endif
 			"FROM `%s` LIMIT 1;", schema_config.auction_db) ){
 		Sql_ShowDebug(sql_handle);
 		return false;
@@ -2507,6 +2652,9 @@ bool char_checkdb(void){
 	//checking cart_db
 	if( SQL_ERROR == Sql_Query(sql_handle, "SELECT  `id`,`char_id`,`nameid`,`amount`,`equip`,`identify`,`refine`,"
 		"`attribute`,`card0`,`card1`,`card2`,`card3`,`option_id0`,`option_val0`,`option_parm0`,`option_id1`,`option_val1`,`option_parm1`,`option_id2`,`option_val2`,`option_parm2`,`option_id3`,`option_val3`,`option_parm3`,`option_id4`,`option_val4`,`option_parm4`,`expire_time`,`bound`,`unique_id`"
+#ifdef STORM_ITEM_DURABILITY
+		",`durability`"
+#endif
 		" FROM `%s` LIMIT 1;", schema_config.cart_db) ){
 		Sql_ShowDebug(sql_handle);
 		return false;
@@ -2515,6 +2663,9 @@ bool char_checkdb(void){
 	if( SQL_ERROR == Sql_Query(sql_handle, "SELECT  `id`,`char_id`,`nameid`,`amount`,`equip`,`identify`,`refine`,"
 		"`attribute`,`card0`,`card1`,`card2`,`card3`,`option_id0`,`option_val0`,`option_parm0`,`option_id1`,`option_val1`,`option_parm1`,`option_id2`,`option_val2`,`option_parm2`,`option_id3`,`option_val3`,`option_parm3`,`option_id4`,`option_val4`,`option_parm4`,`expire_time`,`bound`,`unique_id`"
 		",`favorite`,`equip_switch`"
+#ifdef STORM_ITEM_DURABILITY
+		",`durability`"
+#endif
 		" FROM `%s` LIMIT 1;", schema_config.inventory_db) ){
 		Sql_ShowDebug(sql_handle);
 		return false;
@@ -2522,6 +2673,9 @@ bool char_checkdb(void){
 	//checking guild_storage_db
 	if( SQL_ERROR == Sql_Query(sql_handle, "SELECT  `id`,`guild_id`,`nameid`,`amount`,`equip`,`identify`,`refine`,"
 		"`attribute`,`card0`,`card1`,`card2`,`card3`,`option_id0`,`option_val0`,`option_parm0`,`option_id1`,`option_val1`,`option_parm1`,`option_id2`,`option_val2`,`option_parm2`,`option_id3`,`option_val3`,`option_parm3`,`option_id4`,`option_val4`,`option_parm4`,`expire_time`,`bound`,`unique_id`"
+#ifdef STORM_ITEM_DURABILITY
+		",`durability`"
+#endif
 		" FROM `%s` LIMIT 1;", schema_config.guild_storage_db) ){
 		Sql_ShowDebug(sql_handle);
 		return false;
@@ -2565,82 +2719,88 @@ void char_sql_config_read(const char* cfgName) {
 		if (sscanf(line, "%1023[^:]: %1023[^\r\n]", w1, w2) != 2)
 			continue;
 
-		if(!strcmpi(w1,"char_db"))
+		if (!strcmpi(w1, "char_db"))
 			safestrncpy(schema_config.char_db, w2, sizeof(schema_config.char_db));
-		else if(!strcmpi(w1,"scdata_db"))
+		else if (!strcmpi(w1, "scdata_db"))
 			safestrncpy(schema_config.scdata_db, w2, sizeof(schema_config.scdata_db));
-		else if(!strcmpi(w1,"cart_db"))
+		else if (!strcmpi(w1, "cart_db"))
 			safestrncpy(schema_config.cart_db, w2, sizeof(schema_config.cart_db));
-		else if(!strcmpi(w1,"inventory_db"))
+		else if (!strcmpi(w1, "inventory_db"))
 			safestrncpy(schema_config.inventory_db, w2, sizeof(schema_config.inventory_db));
-		else if(!strcmpi(w1,"charlog_db"))
+		else if (!strcmpi(w1, "charlog_db"))
 			safestrncpy(schema_config.charlog_db, w2, sizeof(schema_config.charlog_db));
-		else if(!strcmpi(w1,"skill_db"))
+		else if (!strcmpi(w1, "skill_db"))
 			safestrncpy(schema_config.skill_db, w2, sizeof(schema_config.skill_db));
-		else if(!strcmpi(w1,"interlog_db"))
+		else if (!strcmpi(w1, "interlog_db"))
 			safestrncpy(schema_config.interlog_db, w2, sizeof(schema_config.interlog_db));
-		else if(!strcmpi(w1,"memo_db"))
+		else if (!strcmpi(w1, "memo_db"))
 			safestrncpy(schema_config.memo_db, w2, sizeof(schema_config.memo_db));
-		else if(!strcmpi(w1,"guild_db"))
+		else if (!strcmpi(w1, "guild_db"))
 			safestrncpy(schema_config.guild_db, w2, sizeof(schema_config.guild_db));
-		else if(!strcmpi(w1,"guild_alliance_db"))
+		else if (!strcmpi(w1, "guild_alliance_db"))
 			safestrncpy(schema_config.guild_alliance_db, w2, sizeof(schema_config.guild_alliance_db));
-		else if(!strcmpi(w1,"guild_castle_db"))
+		else if (!strcmpi(w1, "guild_castle_db"))
 			safestrncpy(schema_config.guild_castle_db, w2, sizeof(schema_config.guild_castle_db));
-		else if(!strcmpi(w1,"guild_expulsion_db"))
+		else if (!strcmpi(w1, "guild_expulsion_db"))
 			safestrncpy(schema_config.guild_expulsion_db, w2, sizeof(schema_config.guild_expulsion_db));
-		else if(!strcmpi(w1,"guild_member_db"))
+		else if (!strcmpi(w1, "guild_member_db"))
 			safestrncpy(schema_config.guild_member_db, w2, sizeof(schema_config.guild_member_db));
-		else if(!strcmpi(w1,"guild_skill_db"))
+		else if (!strcmpi(w1, "guild_skill_db"))
 			safestrncpy(schema_config.guild_skill_db, w2, sizeof(schema_config.guild_skill_db));
-		else if(!strcmpi(w1,"guild_position_db"))
+		else if (!strcmpi(w1, "guild_position_db"))
 			safestrncpy(schema_config.guild_position_db, w2, sizeof(schema_config.guild_position_db));
-		else if(!strcmpi(w1,"guild_storage_db"))
+		else if (!strcmpi(w1, "guild_storage_db"))
 			safestrncpy(schema_config.guild_storage_db, w2, sizeof(schema_config.guild_storage_db));
-		else if(!strcmpi(w1,"party_db"))
+		else if (!strcmpi(w1, "party_db"))
 			safestrncpy(schema_config.party_db, w2, sizeof(schema_config.party_db));
-		else if(!strcmpi(w1,"pet_db"))
+		else if (!strcmpi(w1, "pet_db"))
 			safestrncpy(schema_config.pet_db, w2, sizeof(schema_config.pet_db));
-		else if(!strcmpi(w1,"mail_db"))
+		else if (!strcmpi(w1, "mail_db"))
 			safestrncpy(schema_config.mail_db, w2, sizeof(schema_config.mail_db));
 		else if (!strcmpi(w1, "mail_attachment_db"))
 			safestrncpy(schema_config.mail_attachment_db, w2, sizeof(schema_config.mail_attachment_db));
-		else if(!strcmpi(w1,"auction_db"))
+		else if (!strcmpi(w1, "auction_db"))
 			safestrncpy(schema_config.auction_db, w2, sizeof(schema_config.auction_db));
-		else if(!strcmpi(w1,"friend_db"))
+		else if (!strcmpi(w1, "friend_db"))
 			safestrncpy(schema_config.friend_db, w2, sizeof(schema_config.friend_db));
-		else if(!strcmpi(w1,"hotkey_db"))
+		else if (!strcmpi(w1, "hotkey_db"))
 			safestrncpy(schema_config.hotkey_db, w2, sizeof(schema_config.hotkey_db));
-		else if(!strcmpi(w1,"quest_db"))
-			safestrncpy(schema_config.quest_db,w2,sizeof(schema_config.quest_db));
-		else if(!strcmpi(w1,"homunculus_db"))
-			safestrncpy(schema_config.homunculus_db,w2,sizeof(schema_config.homunculus_db));
-		else if(!strcmpi(w1,"skill_homunculus_db"))
-			safestrncpy(schema_config.skill_homunculus_db,w2,sizeof(schema_config.skill_homunculus_db));
-		else if(!strcmpi(w1,"mercenary_db"))
-			safestrncpy(schema_config.mercenary_db,w2,sizeof(schema_config.mercenary_db));
-		else if(!strcmpi(w1,"mercenary_owner_db"))
-			safestrncpy(schema_config.mercenary_owner_db,w2,sizeof(schema_config.mercenary_owner_db));
-		else if(!strcmpi(w1,"elemental_db"))
-			safestrncpy(schema_config.elemental_db,w2,sizeof(schema_config.elemental_db));
-		else if(!strcmpi(w1,"skillcooldown_db"))
+		else if (!strcmpi(w1, "quest_db"))
+			safestrncpy(schema_config.quest_db, w2, sizeof(schema_config.quest_db));
+		else if (!strcmpi(w1, "homunculus_db"))
+			safestrncpy(schema_config.homunculus_db, w2, sizeof(schema_config.homunculus_db));
+		else if (!strcmpi(w1, "skill_homunculus_db"))
+			safestrncpy(schema_config.skill_homunculus_db, w2, sizeof(schema_config.skill_homunculus_db));
+		else if (!strcmpi(w1, "mercenary_db"))
+			safestrncpy(schema_config.mercenary_db, w2, sizeof(schema_config.mercenary_db));
+		else if (!strcmpi(w1, "mercenary_owner_db"))
+			safestrncpy(schema_config.mercenary_owner_db, w2, sizeof(schema_config.mercenary_owner_db));
+		else if (!strcmpi(w1, "elemental_db"))
+			safestrncpy(schema_config.elemental_db, w2, sizeof(schema_config.elemental_db));
+		else if (!strcmpi(w1, "skillcooldown_db"))
 			safestrncpy(schema_config.skillcooldown_db, w2, sizeof(schema_config.skillcooldown_db));
-		else if(!strcmpi(w1,"bonus_script_db"))
+		else if (!strcmpi(w1, "bonus_script_db"))
 			safestrncpy(schema_config.bonus_script_db, w2, sizeof(schema_config.bonus_script_db));
-		else if(!strcmpi(w1,"char_reg_num_table"))
+		else if (!strcmpi(w1, "char_reg_num_table"))
 			safestrncpy(schema_config.char_reg_num_table, w2, sizeof(schema_config.char_reg_num_table));
-		else if(!strcmpi(w1,"char_reg_str_table"))
+		else if (!strcmpi(w1, "char_reg_str_table"))
 			safestrncpy(schema_config.char_reg_str_table, w2, sizeof(schema_config.char_reg_str_table));
-		else if(!strcmpi(w1,"acc_reg_str_table"))
+		else if (!strcmpi(w1, "acc_reg_str_table"))
 			safestrncpy(schema_config.acc_reg_str_table, w2, sizeof(schema_config.acc_reg_str_table));
-		else if(!strcmpi(w1,"acc_reg_num_table"))
+		else if (!strcmpi(w1, "acc_reg_num_table"))
 			safestrncpy(schema_config.acc_reg_num_table, w2, sizeof(schema_config.acc_reg_num_table));
-		else if(!strcmpi(w1,"clan_table"))
+		else if (!strcmpi(w1, "clan_table"))
 			safestrncpy(schema_config.clan_table, w2, sizeof(schema_config.clan_table));
-		else if(!strcmpi(w1,"clan_alliance_table"))
+		else if (!strcmpi(w1, "clan_alliance_table"))
 			safestrncpy(schema_config.clan_alliance_table, w2, sizeof(schema_config.clan_alliance_table));
-		else if(!strcmpi(w1,"achievement_table"))
+		else if (!strcmpi(w1, "achievement_table"))
 			safestrncpy(schema_config.achievement_table, w2, sizeof(schema_config.achievement_table));
+#ifdef STORM_BAZAAR
+		else if (!strcmpi(w1, "bazaar_table"))
+			safestrncpy(schema_config.bazaar_table, w2, sizeof(schema_config.bazaar_table));
+		else if (!strcmpi(w1, "bazaar_sell_table"))
+			safestrncpy(schema_config.bazaar_sell_table, w2, sizeof(schema_config.bazaar_sell_table));
+#endif
 		//support the import command, just like any other config
 		else if(!strcmpi(w1,"import"))
 			char_sql_config_read(w2);
@@ -2690,6 +2850,10 @@ void char_set_default_sql(){
 	safestrncpy(schema_config.clan_table,"clan",sizeof(schema_config.clan_table));
 	safestrncpy(schema_config.clan_table,"clan_alliance",sizeof(schema_config.clan_alliance_table));
 	safestrncpy(schema_config.achievement_table,"achievement",sizeof(schema_config.achievement_table));
+#ifdef STORM_BAZAAR
+	safestrncpy(schema_config.bazaar_sell_table, "bazaar_sell", sizeof(schema_config.bazaar_sell_table));
+	safestrncpy(schema_config.bazaar_table, "bazaar", sizeof(schema_config.bazaar_table));
+#endif
 }
 
 //set default config

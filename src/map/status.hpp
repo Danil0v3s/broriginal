@@ -8,6 +8,8 @@
 #include "../common/mmo.hpp"
 #include "../common/timer.hpp"
 
+#include "stormbreaker.hpp"
+
 enum e_race2 : uint8;
 struct block_list;
 struct mob_data;
@@ -54,11 +56,12 @@ enum refine_cost_type {
 struct refine_cost {
 	unsigned short nameid;
 	int zeny;
+	bool downgrade;
 };
 
 /// Get refine chance
 int status_get_refine_chance(enum refine_type wlv, int refine, bool enriched);
-int status_get_refine_cost(int weapon_lv, int type, bool what);
+int status_get_refine_cost(int weapon_lv, int type, refineinfo what);
 
 /// Weapon attack modification for size
 struct s_sizefix_db {
@@ -2256,6 +2259,9 @@ enum e_status_change_start_flags {
 	SCSTART_LOADED     = 0x04, /// When sc_data loaded (fetched from table), no values (val1 ~ val4) have to be altered/recalculate
 	SCSTART_NORATEDEF  = 0x08, /// Rate should not be reduced (by statuses or bonuses)
 	SCSTART_NOICON     = 0x10, /// Status icon won't be sent to client
+#ifdef STORM_ITEM_STATUS
+	SCSTART_PASSIVE    = 0x20, /// Status is passive and should be considered absolute
+#endif
 };
 
 /// Enum for status_change_clear_buffs
@@ -2432,6 +2438,12 @@ struct sc_display_entry {
 struct status_change_entry {
 	int timer;
 	int val1,val2,val3,val4;
+#ifdef STORM_ITEM_STATUS
+	bool passive;
+	unsigned short opt1;
+	unsigned short opt2;
+	unsigned int opt3;
+#endif
 };
 
 ///Status change
@@ -2558,7 +2570,7 @@ void status_change_init(struct block_list *bl);
 struct status_change *status_get_sc(struct block_list *bl);
 
 int status_isdead(struct block_list *bl);
-int status_isimmune(struct block_list *bl);
+int status_isimmune(struct block_list* src, struct block_list *bl);
 
 t_tick status_get_sc_def(struct block_list *src,struct block_list *bl, enum sc_type type, int rate, t_tick tick, unsigned char flag);
 //Short version, receives rate in 1->100 range, and does not uses a flag setting.
@@ -2567,8 +2579,15 @@ t_tick status_get_sc_def(struct block_list *src,struct block_list *bl, enum sc_t
 #define sc_start4(src, bl, type, rate, val1, val2, val3, val4, tick) status_change_start(src,bl,type,100*(rate),val1,val2,val3,val4,tick,SCSTART_NONE)
 
 int status_change_start(struct block_list* src, struct block_list* bl,enum sc_type type,int rate,int val1,int val2,int val3,int val4,t_tick duration,unsigned char flag);
+
+#ifdef STORM_ITEM_STATUS
+int status_change_end_(struct block_list* bl, enum sc_type type, int tid, bool passive, const char* file, int line);
+#define status_change_end(bl,type,tid) status_change_end_(bl,type,tid,false,__FILE__,__LINE__)
+#define status_change_end_passive(bl,type,tid) status_change_end_(bl,type,tid,true,__FILE__,__LINE__);
+#else
 int status_change_end_(struct block_list* bl, enum sc_type type, int tid, const char* file, int line);
 #define status_change_end(bl,type,tid) status_change_end_(bl,type,tid,__FILE__,__LINE__)
+#endif
 TIMER_FUNC(status_change_timer);
 int status_change_timer_sub(struct block_list* bl, va_list ap);
 int status_change_clear(struct block_list* bl, int type);

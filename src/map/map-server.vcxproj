@@ -204,6 +204,7 @@
     <ClInclude Include="skill.hpp" />
     <ClInclude Include="status.hpp" />
     <ClInclude Include="storage.hpp" />
+    <ClInclude Include="stormbreaker.hpp" />
     <ClInclude Include="trade.hpp" />
     <ClInclude Include="unit.hpp" />
     <ClInclude Include="vending.hpp" />
@@ -249,6 +250,7 @@
     <ClCompile Include="skill.cpp" />
     <ClCompile Include="status.cpp" />
     <ClCompile Include="storage.cpp" />
+    <ClCompile Include="stormbreaker.cpp" />
     <ClCompile Include="trade.cpp" />
     <ClCompile Include="unit.cpp" />
     <ClCompile Include="vending.cpp" />
@@ -370,4 +372,3 @@
     <Copy SourceFiles="$(SolutionDir)db\import-tmpl\status_disabled.txt" DestinationFolder="$(SolutionDir)db\import\" ContinueOnError="true" Condition="!Exists('$(SolutionDir)db\import\status_disabled.txt')" />
   </Target>
 </Project>
-

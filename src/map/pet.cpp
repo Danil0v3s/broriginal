@@ -1552,6 +1552,9 @@ int pet_food(struct map_session_data *sd, struct pet_data *pd)
 			k = max(k, 1);
 		}
 
+		if (sd->bonus.petintimacy)
+			k += k * sd->bonus.petintimacy / 100;
+
 		pet_set_intimate(pd, pd->pet.intimate + k);
 	}
 

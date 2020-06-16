@@ -1,0 +1,24 @@
+//===================================================================
+// Item Passive Status file
+//-------------------------------------------------------------------
+// ItemID,Status{,Flag{,Val1{,Val2{,Val3{,Val4}}}}}
+//-------------------------------------------------------------------
+//
+// A passive status remains active against a character for as long as
+// the item is present in the inventory. The status cannot be cancelled
+// until the item is removed.
+//
+// An item may have up to 5 passive statuses associated with it, each
+// should be defined on a separate row.
+//
+// ItemID	:	The unique item ID which should activate the status
+// Status	:	The status effect (can be numeric or constant)
+// Flag		:	See below.
+// Val1~4	:	The optional values of the status
+//
+// Flag:
+//		IPF_NONE	The status is always active
+//		IPF_EQUIP	The status is only active while the item is equipped
+//
+//-------------------------------------------------------------------
+

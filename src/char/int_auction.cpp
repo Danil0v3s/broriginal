@@ -53,6 +53,11 @@ void auction_save(struct auction_data *auction)
 	StringBuf_Init(&buf);
 	StringBuf_Printf(&buf, "UPDATE `%s` SET `seller_id` = '%d', `seller_name` = ?, `buyer_id` = '%d', `buyer_name` = ?, `price` = '%d', `buynow` = '%d', `hours` = '%d', `timestamp` = '%lu', `nameid` = '%hu', `item_name` = ?, `type` = '%d', `refine` = '%d', `attribute` = '%d'",
 		schema_config.auction_db, auction->seller_id, auction->buyer_id, auction->price, auction->buynow, auction->hours, (unsigned long)auction->timestamp, auction->item.nameid, auction->type, auction->item.refine, auction->item.attribute);
+
+#ifdef STORM_ITEM_DURABILITY
+	StringBuf_Printf(&buf, " `durability` = '%u'", auction->item.durability);
+#endif
+
 	for( j = 0; j < MAX_SLOTS; j++ )
 		StringBuf_Printf(&buf, ", `card%d` = '%hu'", j, auction->item.card[j]);
 	for (j = 0; j < MAX_ITEM_RDM_OPT; j++) {
@@ -89,6 +94,9 @@ unsigned int auction_create(struct auction_data *auction)
 
 	StringBuf_Init(&buf);
 	StringBuf_Printf(&buf, "INSERT INTO `%s` (`seller_id`,`seller_name`,`buyer_id`,`buyer_name`,`price`,`buynow`,`hours`,`timestamp`,`nameid`,`item_name`,`type`,`refine`,`attribute`,`unique_id`", schema_config.auction_db);
+#ifdef STORM_ITEM_DURABILITY
+	StringBuf_AppendStr(&buf, ",`durability`");
+#endif
 	for( j = 0; j < MAX_SLOTS; j++ )
 		StringBuf_Printf(&buf, ",`card%d`", j);
 	for (j = 0; j < MAX_ITEM_RDM_OPT; ++j) {
@@ -98,6 +106,9 @@ unsigned int auction_create(struct auction_data *auction)
 	}
 	StringBuf_Printf(&buf, ") VALUES ('%d',?,'%d',?,'%d','%d','%d','%lu','%hu',?,'%d','%d','%d','%" PRIu64 "'",
 		auction->seller_id, auction->buyer_id, auction->price, auction->buynow, auction->hours, (unsigned long)auction->timestamp, auction->item.nameid, auction->type, auction->item.refine, auction->item.attribute, auction->item.unique_id);
+#ifdef STORM_ITEM_DURABILITY
+	StringBuf_Printf(&buf, ",'%u'", auction->item.durability);
+#endif
 	for( j = 0; j < MAX_SLOTS; j++ )	
 		StringBuf_Printf(&buf, ",'%hu'", auction->item.card[j]);
 	for (j = 0; j < MAX_ITEM_RDM_OPT; ++j) {
@@ -197,6 +208,9 @@ void inter_auctions_fromsql(void)
 	StringBuf_Init(&buf);
 	StringBuf_AppendStr(&buf, "SELECT `auction_id`,`seller_id`,`seller_name`,`buyer_id`,`buyer_name`,"
 		"`price`,`buynow`,`hours`,`timestamp`,`nameid`,`item_name`,`type`,`refine`,`attribute`,`unique_id`");
+#ifdef STORM_ITEM_DURABILITY
+	StringBuf_AppendStr(&buf, ",`durability`");
+#endif
 	for( i = 0; i < MAX_SLOTS; i++ )
 		StringBuf_Printf(&buf, ",`card%d`", i);
 	for (i = 0; i < MAX_ITEM_RDM_OPT; ++i) {
@@ -213,6 +227,7 @@ void inter_auctions_fromsql(void)
 
 	while( SQL_SUCCESS == Sql_NextRow(sql_handle) )
 	{
+		int pos = 15;
 		struct item *item;
 		struct auction_data *auction;
 		CREATE(auction, struct auction_data, 1);
@@ -235,22 +250,27 @@ void inter_auctions_fromsql(void)
 		Sql_GetData(sql_handle,13, &data, NULL); item->attribute = atoi(data);
 		Sql_GetData(sql_handle,14, &data, NULL); item->unique_id = strtoull(data, NULL, 10);
 
+#ifdef STORM_ITEM_DURABILITY
+		Sql_GetData(sql_handle, 15, &data, NULL); item->durability = atoi(data);
+		pos++;
+#endif
+
 		item->identify = 1;
 		item->amount = 1;
 		item->expire_time = 0;
 
 		for( i = 0; i < MAX_SLOTS; i++ )
 		{
-			Sql_GetData(sql_handle, 15 + i, &data, NULL);
+			Sql_GetData(sql_handle, pos + i, &data, NULL);
 			item->card[i] = atoi(data);
 		}
 
 		for (i = 0; i < MAX_ITEM_RDM_OPT; i++) {
-			Sql_GetData(sql_handle, 15 + MAX_SLOTS + i*3, &data, NULL);
+			Sql_GetData(sql_handle, pos + MAX_SLOTS + i*3, &data, NULL);
 			item->option[i].id = atoi(data);
-			Sql_GetData(sql_handle, 16 + MAX_SLOTS + i*3, &data, NULL);
+			Sql_GetData(sql_handle, pos + 1 + MAX_SLOTS + i*3, &data, NULL);
 			item->option[i].value = atoi(data);
-			Sql_GetData(sql_handle, 17 + MAX_SLOTS + i*3, &data, NULL);
+			Sql_GetData(sql_handle, pos + 2 + MAX_SLOTS + i*3, &data, NULL);
 			item->option[i].param = atoi(data);
 		}
 

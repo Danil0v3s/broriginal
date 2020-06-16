@@ -4852,6 +4852,8 @@ void script_reload(void) {
 	userfunc_db->clear(userfunc_db, db_script_free_code_sub);
 	db_clear(scriptlabel_db);
 
+	storm_clear_npcvar();
+
 	// @commands (script based)
 	// Clear bindings
 	for( i = 0; i < atcmd_binding_count; i++ ) {
@@ -7411,6 +7413,7 @@ BUILDIN_FUNC(getitem)
 	it.nameid = nameid;
 	it.identify = 1;
 	it.bound = BOUND_NONE;
+	STORM_DURABILITY(id, it);
 
 	if( !strcmp(command,"getitembound") ) {
 		char bound = script_getnum(st,4);
@@ -7554,6 +7557,7 @@ BUILDIN_FUNC(getitem2)
 		item_tmp.card[2] = c3;
 		item_tmp.card[3] = c4;
 		item_tmp.bound = bound;
+		STORM_DURABILITY(item_data, item_tmp);
 
 		if (offset != 0) {
 			int res = script_getitem_randomoption(st, sd, &item_tmp, command, offset);
@@ -7595,6 +7599,7 @@ BUILDIN_FUNC(rentitem) {
 	int seconds;
 	unsigned short nameid = 0;
 	unsigned char flag = 0;
+	struct item_data* id;
 
 	if (!script_accid2sd(4,sd))
 		return SCRIPT_CMD_FAILURE;
@@ -7602,19 +7607,18 @@ BUILDIN_FUNC(rentitem) {
 	if( script_isstring(st, 2) )
 	{
 		const char *name = script_getstr(st, 2);
-		struct item_data *itd = itemdb_searchname(name);
-
-		if( itd == NULL )
+		
+		if( !(id = itemdb_searchname(name)) )
 		{
 			ShowError("buildin_rentitem: Nonexistant item %s requested.\n", name);
 			return SCRIPT_CMD_FAILURE;
 		}
-		nameid = itd->nameid;
+		nameid = id->nameid;
 	}
 	else
 	{
 		nameid = script_getnum(st, 2);
-		if( nameid == 0 || !itemdb_exists(nameid) )
+		if( nameid == 0 || !(id = itemdb_exists(nameid)) )
 		{
 			ShowError("buildin_rentitem: Nonexistant item %hu requested.\n", nameid);
 			return SCRIPT_CMD_FAILURE;
@@ -7627,6 +7631,7 @@ BUILDIN_FUNC(rentitem) {
 	it.identify = 1;
 	it.expire_time = (unsigned int)(time(NULL) + seconds);
 	it.bound = BOUND_NONE;
+	STORM_DURABILITY(id, it);
 
 	if( (flag = pc_additem(sd, &it, 1, LOG_TYPE_SCRIPT)) )
 	{
@@ -7709,6 +7714,7 @@ BUILDIN_FUNC(rentitem2) {
 	it.card[2] = (short)c3;
 	it.card[3] = (short)c4;
 	it.expire_time = (unsigned int)(time(NULL) + seconds);
+	STORM_DURABILITY(id, it);
 
 	if (funcname[strlen(funcname)-1] == '3') {
 		int res = script_getitem_randomoption(st, sd, &it, funcname, 11);
@@ -7735,6 +7741,7 @@ BUILDIN_FUNC(getnameditem)
 	unsigned short nameid;
 	struct item item_tmp;
 	TBL_PC *sd, *tsd;
+	struct item_data* it;
 
 	if (!script_rid2sd(sd))
 	{	//Player not attached!
@@ -7755,7 +7762,7 @@ BUILDIN_FUNC(getnameditem)
 	}else
 		nameid = script_getnum(st, 2);
 
-	if(!itemdb_exists(nameid)/* || itemdb_isstackable(nameid)*/)
+	if(!(it = itemdb_exists(nameid))/* || itemdb_isstackable(nameid)*/)
 	{	//Even though named stackable items "could" be risky, they are required for certain quests.
 		script_pushint(st,0);
 		return SCRIPT_CMD_SUCCESS;
@@ -7779,6 +7786,7 @@ BUILDIN_FUNC(getnameditem)
 	item_tmp.card[0]=CARD0_CREATE; //we don't use 255! because for example SIGNED WEAPON shouldn't get TOP10 BS Fame bonus [Lupus]
 	item_tmp.card[2]=tsd->status.char_id;
 	item_tmp.card[3]=tsd->status.char_id >> 16;
+	STORM_DURABILITY(it, item_tmp);
 	if(pc_additem(sd,&item_tmp,1,LOG_TYPE_SCRIPT)) {
 		script_pushint(st,0);
 		return SCRIPT_CMD_SUCCESS;	//Failed to add item, we will not drop if they don't fit
@@ -7816,10 +7824,11 @@ BUILDIN_FUNC(makeitem) {
 	const char *mapname;
 	int m;
 	struct item item_tmp;
+	struct item_data* item_data;
 
 	if( script_isstring(st, 2) ){
 		const char *name = script_getstr(st, 2);
-		struct item_data *item_data = itemdb_searchname(name);
+		item_data = itemdb_searchname(name);
 
 		if( item_data )
 			nameid = item_data->nameid;
@@ -7827,7 +7836,10 @@ BUILDIN_FUNC(makeitem) {
 			nameid = UNKNOWN_ITEM_ID;
 	}
 	else
+	{
 		nameid = script_getnum(st, 2);
+		item_data = itemdb_exists(nameid);
+	}
 
 	amount = script_getnum(st,3);
 	mapname	= script_getstr(st,4);
@@ -7854,6 +7866,7 @@ BUILDIN_FUNC(makeitem) {
 			item_tmp.identify = 1;
 		else
 			item_tmp.identify = itemdb_isidentified(nameid);
+		STORM_DURABILITY(item_data, item_tmp);
 
 		map_addflooritem(&item_tmp,amount,m,x,y,0,0,0,4,0);
 	}
@@ -7929,6 +7942,7 @@ BUILDIN_FUNC(makeitem2) {
 		item_tmp.card[1] = script_getnum(st,11);
 		item_tmp.card[2] = script_getnum(st,12);
 		item_tmp.card[3] = script_getnum(st,13);
+		STORM_DURABILITY(id, item_tmp);
 
 		if (funcname[strlen(funcname)-1] == '3') {
 			int res = script_getitem_randomoption(st, nullptr, &item_tmp, funcname, 14);
@@ -8942,6 +8956,12 @@ BUILDIN_FUNC(repair)
 				repaircounter++;
 				if(num == repaircounter) {
 					sd->inventory.u.items_inventory[i].attribute = 0;
+
+#ifdef STORM_ITEM_DURABILITY
+					if (sd->inventory.u.items_inventory[i].durability < STORM_ITEM_MAX_DURABILITY && battle_config.storm_item_durability_repair)
+						sd->inventory.u.items_inventory[i].durability = STORM_ITEM_MAX_DURABILITY;
+#endif
+
 					clif_equiplist(sd);
 					clif_produceeffect(sd, 0, sd->inventory.u.items_inventory[i].nameid);
 					clif_misceffect(&sd->bl, 3);
@@ -8968,6 +8988,12 @@ BUILDIN_FUNC(repairall)
 	{
 		if( sd->inventory.u.items_inventory[i].nameid && sd->inventory.u.items_inventory[i].card[0] != CARD0_PET && sd->inventory.u.items_inventory[i].attribute ){
 			sd->inventory.u.items_inventory[i].attribute = 0;
+
+#ifdef STORM_ITEM_DURABILITY
+			if (sd->inventory.u.items_inventory[i].durability < STORM_ITEM_MAX_DURABILITY && battle_config.storm_item_durability_repair)
+				sd->inventory.u.items_inventory[i].durability = STORM_ITEM_MAX_DURABILITY;
+#endif
+
 			clif_produceeffect(sd,0,sd->inventory.u.items_inventory[i].nameid);
 			repaircounter++;
 		}
@@ -9429,6 +9455,15 @@ BUILDIN_FUNC(bonus)
 		case SP_SKILL_DELAY:
 		case SP_SKILL_USE_SP:
 		case SP_SUB_SKILL:
+		case SP_ADD_AREASKILL:
+		case SP_SKILL_GAINSP:
+		case SP_SKILLCHAIN:
+		case SP_SKILLBOUNCE:
+		case SP_IGNORE_SKILL_DEF_ELE:
+		case SP_IGNORE_SKILL_DEF_RACE:
+		case SP_DOUBLECAST:
+		case SP_SKILLHPCOST:
+		case SP_SKILLITEMCOST:
 			// these bonuses support skill names
 			if (script_isstring(st, 3)) {
 				const char *name = script_getstr(st, 3);
@@ -13262,7 +13297,10 @@ BUILDIN_FUNC(successremovecards) {
 	if(cardflag == 1) {//if card was remove remplace item with no card
 		unsigned char flag = 0, j;
 		struct item item_tmp;
+		struct item_data* it;
 		memset(&item_tmp,0,sizeof(item_tmp));
+
+		it = itemdb_search(sd->inventory.u.items_inventory[i].nameid);
 
 		item_tmp.nameid      = sd->inventory.u.items_inventory[i].nameid;
 		item_tmp.identify    = 1;
@@ -13270,6 +13308,9 @@ BUILDIN_FUNC(successremovecards) {
 		item_tmp.attribute   = sd->inventory.u.items_inventory[i].attribute;
 		item_tmp.expire_time = sd->inventory.u.items_inventory[i].expire_time;
 		item_tmp.bound       = sd->inventory.u.items_inventory[i].bound;
+#ifdef STORM_ITEM_DURABILITY
+		item_tmp.durability  = sd->inventory.u.items_inventory[i].durability;
+#endif
 
 		for (j = sd->inventory_data[i]->slot; j < MAX_SLOTS; j++)
 			item_tmp.card[j]=sd->inventory.u.items_inventory[i].card[j];
@@ -13355,6 +13396,10 @@ BUILDIN_FUNC(failedremovecards) {
 			item_tmp.attribute   = sd->inventory.u.items_inventory[i].attribute;
 			item_tmp.expire_time = sd->inventory.u.items_inventory[i].expire_time;
 			item_tmp.bound       = sd->inventory.u.items_inventory[i].bound;
+
+#ifdef STORM_ITEM_DURABILITY
+			item_tmp.durability  = sd->inventory.u.items_inventory[i].durability;
+#endif
 
 			for (j = sd->inventory_data[i]->slot; j < MAX_SLOTS; j++)
 				item_tmp.card[j]=sd->inventory.u.items_inventory[i].card[j];
@@ -21445,6 +21490,7 @@ BUILDIN_FUNC(getrandgroupitem) {
 	uint8 sub_group = 1;
 	struct item item_tmp;
 	struct s_item_group_entry *entry = NULL;
+	struct item_data* it;
 
 	if (!script_charid2sd(6, sd))
 		return SCRIPT_CMD_SUCCESS;
@@ -21464,9 +21510,12 @@ BUILDIN_FUNC(getrandgroupitem) {
 	if (!entry)
 		return SCRIPT_CMD_FAILURE; //ensure valid itemid
 
+	it = itemdb_search(entry->nameid);
+
 	memset(&item_tmp,0,sizeof(item_tmp));
 	item_tmp.nameid   = entry->nameid;
 	item_tmp.identify = identify ? 1 : itemdb_isidentified(entry->nameid);
+	STORM_DURABILITY(it, item_tmp);
 
 	if (!qty)
 		qty = entry->amount;
@@ -24026,7 +24075,7 @@ BUILDIN_FUNC(getequiprefinecost) {
 			weapon_lv = REFINE_TYPE_SHADOW;
 	}
 
-	script_pushint(st, status_get_refine_cost(weapon_lv, type, info != 0));
+	script_pushint(st, status_get_refine_cost(weapon_lv, type, (refineinfo)info));
 
 	return SCRIPT_CMD_SUCCESS;
 }

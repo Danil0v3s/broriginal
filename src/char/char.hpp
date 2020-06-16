@@ -88,6 +88,10 @@ struct Schema_Config {
 	char clan_table[DB_NAME_LEN];
 	char clan_alliance_table[DB_NAME_LEN];
 	char achievement_table[DB_NAME_LEN];
+#ifdef STORM_BAZAAR
+	char bazaar_table[DB_NAME_LEN];
+	char bazaar_sell_table[DB_NAME_LEN];
+#endif
 };
 extern struct Schema_Config schema_config;
 

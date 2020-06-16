@@ -323,6 +323,9 @@ int mapif_parse_achievement_reward(int fd){
 		item.nameid = RFIFOW(fd, 10);
 		item.amount = RFIFOL(fd, 12);
 		item.identify = 1;
+#ifdef STORM_ITEM_DURABILITY
+		item.durability = 1000000;
+#endif
 
 		safesnprintf(mail_sender, NAME_LENGTH, char_msg_txt(227)); // 227: GM
 		safestrncpy(mail_receiver, RFIFOCP(fd,16), NAME_LENGTH);

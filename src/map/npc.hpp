@@ -10,6 +10,8 @@
 #include "status.hpp" // struct status_change
 #include "unit.hpp" // struct unit_data
 
+#define MAX_NPC_VARIABLE_NAME 40
+
 struct block_list;
 struct npc_data;
 struct view_data;
@@ -98,6 +100,7 @@ struct npc_data {
 
 	struct sc_display_entry **sc_display;
 	unsigned char sc_display_count;
+	char variable[MAX_NPC_VARIABLE_NAME];
 
 	struct {
 		t_tick timeout;
@@ -1269,6 +1272,7 @@ extern struct npc_data* fake_nd;
 
 int npc_cashshop_buylist(struct map_session_data *sd, int points, int count, unsigned short* item_list);
 bool npc_shop_discount(struct npc_data* nd);
+bool npc_shop_discount2(enum npc_subtype type, bool discount);
 
 #if PACKETVER >= 20131223
 void npc_market_tosql(const char *exname, struct npc_item_list *list);
