@@ -13626,7 +13626,7 @@ void clif_parse_OpenVending(int fd, struct map_session_data* sd){
 		return;
 	}
 
-	if( message[0] == '\0' ) // invalid input
+	if (message[0] == '\0') { // invalid input
 		if (sd->state.romarket) {
 			items = sd->cart.u.items_cart;
 			for (int i = 0; i < MAX_CART; ++i) {
@@ -13640,6 +13640,8 @@ void clif_parse_OpenVending(int fd, struct map_session_data* sd){
 			}
 		}
 		return;
+	} 
+		
 
 	vending_openvending(sd, message, data, len/8, NULL);
 }
