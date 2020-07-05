@@ -167,6 +167,7 @@
     <ClInclude Include="atcommand.hpp" />
     <ClInclude Include="battle.hpp" />
     <ClInclude Include="battleground.hpp" />
+    <ClInclude Include="bridge_clif.hpp" />
     <ClInclude Include="buyingstore.hpp" />
     <ClInclude Include="cashshop.hpp" />
     <ClInclude Include="channel.hpp" />
@@ -213,6 +214,7 @@
     <ClCompile Include="atcommand.cpp" />
     <ClCompile Include="battle.cpp" />
     <ClCompile Include="battleground.cpp" />
+    <ClCompile Include="bridge_clif.cpp" />
     <ClCompile Include="buyingstore.cpp" />
     <ClCompile Include="cashshop.cpp" />
     <ClCompile Include="channel.cpp" />
@@ -370,4 +372,3 @@
     <Copy SourceFiles="$(SolutionDir)db\import-tmpl\status_disabled.txt" DestinationFolder="$(SolutionDir)db\import\" ContinueOnError="true" Condition="!Exists('$(SolutionDir)db\import\status_disabled.txt')" />
   </Target>
 </Project>
-

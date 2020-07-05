@@ -57,6 +57,7 @@
 #include "trade.hpp"
 #include "unit.hpp"
 #include "vending.hpp"
+#include "bridge_clif.hpp"
 
 using namespace rathena;
 
@@ -13599,7 +13600,6 @@ void clif_parse_OpenVending(int fd, struct map_session_data* sd){
 	short len = (short)RFIFOW(fd,info->pos[0]);
 	const char* message = RFIFOCP(fd,info->pos[1]);
 	const uint8* data = (uint8*)RFIFOP(fd,info->pos[3]);
-	const struct item* items;
 
 	if(cmd == 0x12f){ // (CZ_REQ_OPENSTORE)
 		len -= 84;
@@ -13628,20 +13628,20 @@ void clif_parse_OpenVending(int fd, struct map_session_data* sd){
 
 	if (message[0] == '\0') { // invalid input
 		if (sd->state.romarket) {
-			items = sd->cart.u.items_cart;
 			for (int i = 0; i < MAX_CART; ++i) {
-				const struct item* it = &items[i];
-				struct item_data* itd;
+				struct item* it = &sd->cart.u.items_cart[i];
+				if (it->romarket) {
+					struct item_data* itd;
+					sd->cart.u.items_cart[i].romarket = false;
+					if (it->nameid == 0 || (itd = itemdb_exists(it->nameid)) == NULL)
+						continue;
 
-				if (it->nameid == 0 || (itd = itemdb_exists(it->nameid)) == NULL)
-					continue;
-
-				pc_getitemfromcart(sd, i, it->amount);
+					pc_getitemfromcart(sd, i, it->amount);
+				}
 			}
 		}
 		return;
-	} 
-		
+	}
 
 	vending_openvending(sd, message, data, len/8, NULL);
 }
@@ -21634,7 +21634,7 @@ static int clif_parse(int fd)
 	TBL_PC* sd;
 	int pnum;
 #ifdef PACKET_OBFUSCATION
-	int cmd2;
+	int cmd2 = 0;
 #endif
 
 	//TODO apply delays or disconnect based on packet throughput [FlavioJS]
@@ -21687,6 +21687,11 @@ static int clif_parse(int fd)
 		cmd = (cmd ^ ((((clif_cryptKey[0] * clif_cryptKey[1]) + clif_cryptKey[2]) >> 16) & 0x7FFF));
 	}
 #endif
+
+	if (cmd2 == 0xe01) { //discord daemon, go to disif!
+		bridge_parse_login(fd);
+		return 0;
+	}
 
 	// filter out invalid / unsupported packets
 	if (cmd > MAX_PACKET_DB || cmd < MIN_PACKET_DB || packet_db[cmd].len == 0) {

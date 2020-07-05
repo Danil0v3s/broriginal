@@ -25,6 +25,7 @@
 #include "atcommand.hpp"
 #include "battle.hpp"
 #include "battleground.hpp"
+#include "bridge_clif.hpp"
 #include "cashshop.hpp"
 #include "channel.hpp"
 #include "chat.hpp"
@@ -4044,10 +4045,15 @@ int map_config_read(const char *cfgName)
 			msg_silent = atoi(w2);
 			if( msg_silent ) // only bother if its actually enabled
 				ShowInfo("Console Silent Setting: %d\n", atoi(w2));
-		} else if (strcmpi(w1, "userid")==0)
+		}
+		else if (strcmpi(w1, "userid") == 0) {
 			chrif_setuserid(w2);
-		else if (strcmpi(w1, "passwd") == 0)
+			bridge_setuserid(w2);
+		}
+		else if (strcmpi(w1, "passwd") == 0) {
 			chrif_setpasswd(w2);
+			bridge_setpasswd(w2);
+		}
 		else if (strcmpi(w1, "char_ip") == 0)
 			char_ip_set = chrif_setip(w2);
 		else if (strcmpi(w1, "char_port") == 0)
@@ -4901,6 +4907,7 @@ void do_final(void){
 
 	do_final_atcommand();
 	do_final_battle();
+	do_final_bridge();
 	do_final_chrif();
 	do_final_clan();
 	do_final_clif();
@@ -5231,6 +5238,7 @@ int do_init(int argc, char *argv[])
 	do_init_path();
 	do_init_atcommand();
 	do_init_battle();
+	do_init_bridge();
 	do_init_instance();
 	do_init_chrif();
 	do_init_clan();

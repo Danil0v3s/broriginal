@@ -10286,6 +10286,7 @@ ACMD_FUNC(romarket)
 			continue;
 
 		if (sd->inventory.u.items_inventory[i].equip == 0) {
+			sd->inventory.u.items_inventory[i].romarket = true;
 			pc_putitemtocart(sd, i, sd->inventory.u.items_inventory[i].amount);
 		}
 	}

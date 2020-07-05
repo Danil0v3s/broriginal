@@ -14,6 +14,7 @@
 #include "achievement.hpp"
 #include "atcommand.hpp"
 #include "battle.hpp"
+#include "bridge_clif.hpp"
 #include "buyingstore.hpp"
 #include "buyingstore.hpp" // struct s_autotrade_entry, struct s_autotrader
 #include "chrif.hpp"
@@ -361,37 +362,66 @@ int8 vending_openvending(struct map_session_data* sd, const char* message, const
 		return 5;
 	}
 
-	sd->state.prevend = 0;
-	sd->state.vending = true;
-	sd->state.workinprogress = WIP_DISABLE_NONE;
-	sd->vender_id = vending_getuid();
-	sd->vend_num = i;
-	safestrncpy(sd->message, message, MESSAGE_SIZE);
+	if (sd->state.romarket) {
+		for (j = 0; j < i; j++) {
+			int auction_id = bridge_create_auction_data(sd->status.char_id, sd->status.name, sd->cart.u.items_cart[sd->vending[j].index], sd->vending[j].value);
+			if (auction_id > 0) {
+				pc_cart_delitem(sd, sd->vending[j].index, 1, 0, LOG_TYPE_CONSUME);
+			}
+		}
+
+		for (int i = 0; i < MAX_CART; ++i) {
+			struct item* it = &sd->cart.u.items_cart[i];
+			if (it->romarket) {
+				struct item_data* itd;
+				sd->cart.u.items_cart[i].romarket = false;
+				if (it->nameid == 0 || (itd = itemdb_exists(it->nameid)) == NULL)
+					continue;
+
+				pc_getitemfromcart(sd, i, it->amount);
+			}
+		}
+
+		chrif_save(sd, CSAVE_CART);
+		chrif_save(sd, CSAVE_INVENTORY);
+		sd->state.romarket = false;
+		clif_refresh(sd);
+
+		return 0;
+	}
+	else {
+		sd->state.prevend = 0;
+		sd->state.vending = true;
+		sd->state.workinprogress = WIP_DISABLE_NONE;
+		sd->vender_id = vending_getuid();
+		sd->vend_num = i;
+		safestrncpy(sd->message, message, MESSAGE_SIZE);
+
+		Sql_EscapeString(mmysql_handle, message_sql, sd->message);
+
+		if (Sql_Query(mmysql_handle, "INSERT INTO `%s`(`id`, `account_id`, `char_id`, `sex`, `map`, `x`, `y`, `title`, `autotrade`, `body_direction`, `head_direction`, `sit`) "
+			"VALUES( %d, %d, %d, '%c', '%s', %d, %d, '%s', %d, '%d', '%d', '%d' );",
+			vendings_table, sd->vender_id, sd->status.account_id, sd->status.char_id, sd->status.sex == SEX_FEMALE ? 'F' : 'M', map_getmapdata(sd->bl.m)->name, sd->bl.x, sd->bl.y, message_sql, sd->state.autotrade, at ? at->dir : sd->ud.dir, at ? at->head_dir : sd->head_dir, at ? at->sit : pc_issit(sd)) != SQL_SUCCESS) {
+			Sql_ShowDebug(mmysql_handle);
+		}
+
+		StringBuf_Init(&buf);
+		StringBuf_Printf(&buf, "INSERT INTO `%s`(`vending_id`,`index`,`cartinventory_id`,`amount`,`price`) VALUES", vending_items_table);
+		for (j = 0; j < i; j++) {
+			StringBuf_Printf(&buf, "(%d,%d,%d,%d,%d)", sd->vender_id, j, sd->cart.u.items_cart[sd->vending[j].index].id, sd->vending[j].amount, sd->vending[j].value);
+			if (j < i - 1)
+				StringBuf_AppendStr(&buf, ",");
+		}
+		if (SQL_ERROR == Sql_QueryStr(mmysql_handle, StringBuf_Value(&buf)))
+			Sql_ShowDebug(mmysql_handle);
+		StringBuf_Destroy(&buf);
+
+		clif_openvending(sd, sd->bl.id, sd->vending);
+		clif_showvendingboard(&sd->bl, message, 0);
+
+		idb_put(vending_db, sd->status.char_id, sd);
+	}
 	
-	Sql_EscapeString( mmysql_handle, message_sql, sd->message );
-
-	if( Sql_Query( mmysql_handle, "INSERT INTO `%s`(`id`, `account_id`, `char_id`, `sex`, `map`, `x`, `y`, `title`, `autotrade`, `body_direction`, `head_direction`, `sit`) "
-		"VALUES( %d, %d, %d, '%c', '%s', %d, %d, '%s', %d, '%d', '%d', '%d' );",
-		vendings_table, sd->vender_id, sd->status.account_id, sd->status.char_id, sd->status.sex == SEX_FEMALE ? 'F' : 'M', map_getmapdata(sd->bl.m)->name, sd->bl.x, sd->bl.y, message_sql, sd->state.autotrade, at ? at->dir : sd->ud.dir, at ? at->head_dir : sd->head_dir, at ? at->sit : pc_issit(sd) ) != SQL_SUCCESS ) {
-		Sql_ShowDebug(mmysql_handle);
-	}
-
-	StringBuf_Init(&buf);
-	StringBuf_Printf(&buf, "INSERT INTO `%s`(`vending_id`,`index`,`cartinventory_id`,`amount`,`price`) VALUES", vending_items_table);
-	for (j = 0; j < i; j++) {
-		StringBuf_Printf(&buf, "(%d,%d,%d,%d,%d)", sd->vender_id, j, sd->cart.u.items_cart[sd->vending[j].index].id, sd->vending[j].amount, sd->vending[j].value);
-		if (j < i-1)
-			StringBuf_AppendStr(&buf, ",");
-	}
-	if (SQL_ERROR == Sql_QueryStr(mmysql_handle, StringBuf_Value(&buf)))
-		Sql_ShowDebug(mmysql_handle);
-	StringBuf_Destroy(&buf);
-
-	clif_openvending(sd,sd->bl.id,sd->vending);
-	clif_showvendingboard(&sd->bl,message,0);
-
-	idb_put(vending_db, sd->status.char_id, sd);
-
 	return 0;
 }
 
