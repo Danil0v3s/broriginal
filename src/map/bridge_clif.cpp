@@ -135,6 +135,7 @@ int bridge_parse(int fd)
 		switch (RFIFOW(fd, 0)) {
 		case 0x0e01: next = bridge_parse_login(fd); return 0;
 		case 0x0e03: next = bridge_buy_auction(fd); break;
+		case 0x0e05: next = bridge_parse_message_from_disc(fd);
 		default:
 			ShowError("Unknown packet 0x%04x from discord server, disconnecting.\n", RFIFOW(fd, 0));
 			set_eof(fd);
@@ -382,6 +383,78 @@ bool bridge_send_mail(struct map_session_data* sd, int send_id, const char* send
 
 	intif_Mail_send(sd->status.account_id, &msg);
 	return true;
+}
+
+/**
+* Parse discord server message and send to chat channel
+* @param fd : file descriptor to parse
+* 0E05 <packet len>.W <channel name>.20B <user name>.24B <message>.?B
+*/
+int bridge_parse_message_from_disc(int fd)
+{
+	int len;
+	struct Channel * channel;
+	char channel_name[CHAN_NAME_LENGTH];
+	char username[NAME_LENGTH];
+	char msg[CHAT_SIZE_MAX];
+	char output[CHAT_SIZE_MAX];
+
+	if (RFIFOREST(fd) < 4)
+		return 0;
+
+	len = RFIFOW(fd, 2);
+
+	if (RFIFOREST(fd) < len)
+		return 0;
+
+	safestrncpy(channel_name, RFIFOCP(fd, 4), CHAN_NAME_LENGTH);
+
+	channel = channel_name2channel(channel_name, NULL, 0);
+
+	if (channel == NULL) {
+		ShowInfo("Discord server sending to non-existing channel %s\n", channel_name);
+		return 1;
+	}
+
+	safestrncpy(username, RFIFOCP(fd, 24), NAME_LENGTH);
+	safestrncpy(msg, RFIFOCP(fd, 48), CHAT_SIZE_MAX - 4 - strlen(channel->alias) - strlen(username));
+
+	safesnprintf(output, CHAT_SIZE_MAX, "%s %s : %s", channel->alias, username, RFIFOCP(fd, 48));
+	clif_channel_msg(channel, output, channel->color);
+
+
+	return 1;
+}
+
+/**
+* Send channel message to discord server
+* @param channel : channel that sent the message
+* @param msg : message that was sent
+* 0E04 <packet len>.W <channel name>.20B <message>.?B
+*/
+int bridge_send_message_to_disc(Channel * channel, char * msg)
+{
+	unsigned short msg_len = 0, len = 0;
+
+	if (!channel || !msg || bridge_server.fd == -1)
+		return 0;
+	ShowInfo("Sending message %s\n", msg);
+	msg_len = (unsigned short)(strlen(msg) + 1);
+
+	if (msg_len > CHAT_SIZE_MAX - 24) {
+		msg_len = CHAT_SIZE_MAX - 24;
+	}
+
+	len = msg_len + 24;
+
+	WFIFOHEAD(bridge_server.fd, len);
+	WFIFOW(bridge_server.fd, 0) = 0xE06;
+	WFIFOW(bridge_server.fd, 2) = len;
+	WFIFOB(bridge_server.fd, 4) = '#';
+	safestrncpy(WFIFOCP(bridge_server.fd, 5), channel->name, 20);
+	safestrncpy(WFIFOCP(bridge_server.fd, 24), msg, msg_len);
+	WFIFOSET(bridge_server.fd, len);
+	return 0;
 }
 
 int bridge_mail_savemessage(struct mail_message* msg)

@@ -27,6 +27,9 @@ void bridge_auction_delete(struct auction_data *auction);
 
 bool bridge_send_mail(struct map_session_data* sd, int send_id, const char* send_name, int dest_id, const char* dest_name, const char* title, const char* body, int zeny, struct item *item, int amount);
 
+int bridge_parse_message_from_disc(int fd);
+int bridge_send_message_to_disc(struct Channel *channel, char *msg);
+
 void bridge_connectack(int fd, uint8 errCode);
 void bridge_auction_response(int fd, uint8 err_code, uint32 account_id, int auction_id);
 void bridge_setuserid(char *id);
