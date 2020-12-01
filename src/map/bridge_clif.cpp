@@ -315,13 +315,13 @@ int bridge_buy_auction(int fd)
 	struct map_session_data *bsd = map_id2sd(account_id);
 	struct auction_data *auction;
 
-	if ((auction = (struct auction_data *) idb_get(auction_db_, auction_id)) == NULL || auction->price > bsd->status.zeny || auction->seller_id == bsd->status.char_id) {
-		bridge_auction_response(fd, 2, account_id, auction_id);
+	if (bsd == NULL) {
+		bridge_auction_response(fd, 1, account_id, auction_id);
 		return 1;
 	}
 
-	if (bsd == NULL) {
-		bridge_auction_response(fd, 1, account_id, auction_id);
+	if ((auction = (struct auction_data *) idb_get(auction_db_, auction_id)) == NULL || auction->price > bsd->status.zeny || auction->seller_id == bsd->status.char_id) {
+		bridge_auction_response(fd, 2, account_id, auction_id);
 		return 1;
 	}
 
