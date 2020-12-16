@@ -1747,7 +1747,7 @@ int clif_hom_food(struct map_session_data *sd,int foodid,int fail)	//[orn]
 void clif_walkok(struct map_session_data *sd)
 {
 	int fd=sd->fd;
-
+	int len = packet_len(0x87);
 	WFIFOHEAD(fd, packet_len(0x87));
 	WFIFOW(fd,0)=0x87;
 	WFIFOL(fd,2)=client_tick(gettick());
@@ -10985,7 +10985,12 @@ void clif_progressbar_npc( struct npc_data *nd, struct map_session_data* sd ){
 /// There are various variants of this packet, some of them have padding between fields.
 void clif_parse_WalkToXY(int fd, struct map_session_data *sd)
 {
+	int len = packet_db[RFIFOW(fd, 0)].len;
 	short x, y;
+
+	uint8 xx = RFIFOB(fd, 3);
+	uint8 yy = RFIFOB(fd, 4);
+	char dirr = RFIFOB(fd, 5);
 
 	if (pc_isdead(sd)) {
 		clif_clearunit_area(&sd->bl, CLR_DEAD);
