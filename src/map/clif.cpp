@@ -21658,7 +21658,7 @@ static int clif_parse(int fd)
 		do_close(fd);
 		return 0;
 	}
-
+	int rest = RFIFOREST(fd);
 	if (RFIFOREST(fd) < 2)
 		return 0;
 
